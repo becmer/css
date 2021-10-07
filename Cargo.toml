@@ -27,11 +27,11 @@ codegen-units = 1
 
 [dependencies]
 bitflags = "^1.0"
-cssparser = "0.21.3"
+cssparser = "0.29"
 either = "1.2.0"
 ordermap = "0.2.13"
-phf = "0.7.21"
-phf_macros = "0.7.21"
+phf = "0.10"
+phf_macros = "0.10"
 precomputed-hash = "^0.1"
 quick-error = "1.2.1"
 smallvec = "0.4"
@@ -49,7 +49,7 @@ log = "0.3"
 matches = "0.1"
 
 [build-dependencies]
-phf_codegen = "0.7.18"
+phf_codegen = "0.10"
 
 #[patch.crates-io]
 #selectors = { git = "https://github.com/servo/servo", rev = "4f984a6428a0f497e311a0800efa55166c15aac6" }
