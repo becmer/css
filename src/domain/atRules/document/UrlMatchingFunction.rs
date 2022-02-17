@@ -36,7 +36,10 @@ macro_rules! parse_quoted_or_unquoted_string
                 match input.next()
                 {
                     Ok(&Token::QuotedString(ref value)) => Ok($url_matching_function(value.as_ref().to_owned())),
-                    Ok(t) => Err(BasicParseError::UnexpectedToken(t.clone()).into()),
+                    Ok(t) => {
+						let t = t.clone();
+						Err(input.new_unexpected_token_error(t))
+					},
                     Err(e) => Err(e.into()),
                 }
             }).or_else(|_: ParseError<'i, CustomParseError<'i>>|
@@ -90,28 +93,28 @@ impl UrlMatchingFunction
 	/// Parse a URL matching function for a `@document` rule's condition.
 	pub(crate) fn parse<'i, 't>(context: &ParserContext, input: &mut Parser<'i, 't>) -> Result<UrlMatchingFunction, ParseError<'i, CustomParseError<'i>>>
 	{
-		if input.try(|input| input.expect_function_matching("url-prefix")).is_ok()
+		if input.r#try(|input| input.expect_function_matching("url-prefix")).is_ok()
 		{
 			parse_quoted_or_unquoted_string!(input, UrlMatchingFunction::UrlPrefix)
 		}
-		else if input.try(|input| input.expect_function_matching("domain")).is_ok()
+		else if input.r#try(|input| input.expect_function_matching("domain")).is_ok()
 		{
 			parse_quoted_or_unquoted_string!(input, UrlMatchingFunction::Domain)
 		}
-		else if input.try(|input| input.expect_function_matching("regexp")).is_ok()
+		else if input.r#try(|input| input.expect_function_matching("regexp")).is_ok()
 		{
 			input.parse_nested_block(|input|
 			{
 				Ok(UrlMatchingFunction::RegExp(input.expect_string()?.as_ref().to_owned()))
 			})
 		}
-		else if let Ok(url) = input.try(|input| SpecifiedUrl::parse(context, input))
+		else if let Ok(url) = input.r#try(|input| SpecifiedUrl::parse(context, input))
 		{
 			Ok(UrlMatchingFunction::Url(url))
 		}
 		else
 		{
-			Err(ParseError::Custom(CustomParseError::DocumentAtRuleUrlMatchingFunctionWasInvalid))
+			Err(input.new_custom_error(CustomParseError::DocumentAtRuleUrlMatchingFunctionWasInvalid))
 		}
 	}
 	

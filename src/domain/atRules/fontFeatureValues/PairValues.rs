@@ -13,7 +13,10 @@ impl Parse for PairValues
 		let first = match *input.next()?
 		{
 			Token::Number { int_value: Some(firstValue), .. } if firstValue >= 0 => firstValue as u32,
-			ref unexpectedToken => return CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken => {
+				let unexpectedToken = unexpectedToken.clone();
+				return Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		};
 
 		match input.next()
@@ -24,7 +27,10 @@ impl Parse for PairValues
 			}
 
 			// It can't be anything other than number.
-			Ok(unexpectedToken) => CustomParseError::unexpectedToken(unexpectedToken),
+			Ok(unexpectedToken) => {
+				let unexpectedToken = unexpectedToken.clone();
+				Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 
 			// It can be just one value.
 			Err(_) => Ok(PairValues(first, None))

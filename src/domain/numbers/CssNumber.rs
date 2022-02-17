@@ -74,10 +74,8 @@ pub trait CssNumber: Sized
 		}
 	}
 	
-	#[inline(always)]
 	fn as_f32(&self) -> f32;
 	
-	#[inline(always)]
 	fn as_u32(&self) -> u32;
 	
 	#[inline(always)]
@@ -123,9 +121,7 @@ pub trait CssNumber: Sized
 	}
 	
 	#[doc(hidden)]
-	#[inline(always)]
 	fn _construct(value: f32) -> Self;
 	
-	#[inline(always)]
-	fn parseNumber<'i>(value: f32, _int_value: Option<i32>) -> Result<Self, ParseError<'i, CustomParseError<'i>>>;
+	fn parseNumber<'i>(value: f32, _int_value: Option<i32>) -> Result<Self, CustomParseError<'i>>;
 }

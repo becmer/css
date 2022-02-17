@@ -16,18 +16,14 @@ pub(crate) struct TopLevelRuleParser
 
 impl<'i> AtRuleParser<'i> for TopLevelRuleParser
 {
-	type PreludeNoBlock = CssRule;
-	
-	type PreludeBlock = AtRuleBlockPrelude;
+	type Prelude = AtRuleBlockPrelude;
 	
 	type AtRule = CssRule;
 	
 	type Error = CustomParseError<'i>;
 	
-	fn parse_prelude<'t>(&mut self, name: CowRcStr<'i>, input: &mut Parser<'i, 't>) -> Result<AtRuleType<Self::PreludeNoBlock, Self::PreludeBlock>, ParseError<'i, Self::Error>>
+	fn parse_prelude<'t>(&mut self, name: CowRcStr<'i>, input: &mut Parser<'i, 't>) -> Result<Self::Prelude, ParseError<'i, Self::Error>>
 	{
-		use ::cssparser::AtRuleType::WithoutBlock;
-		
 		match_ignore_ascii_case!
 		{
 			&name,
@@ -35,29 +31,29 @@ impl<'i> AtRuleParser<'i> for TopLevelRuleParser
 			"charset" =>
 			{
 				// @charset is removed by cssparser if it’s the first rule in the stylesheet; anything left is invalid.
-				Err(ParseError::Custom(CustomParseError::UnexpectedCharsetAtRule))
-			}
+				Err(input.new_custom_error(CustomParseError::UnexpectedCharsetAtRule))
+			},
 			
 			"import" =>
 			{
 				if self.state > State::Imports
 				{
-					return Err(ParseError::Custom(CustomParseError::AtRuleImportMustBeBeforeAnyRuleExceptAtRuleCharset));
+					return Err(input.new_custom_error(CustomParseError::AtRuleImportMustBeBeforeAnyRuleExceptAtRuleCharset));
 				}
 				
-				Ok(WithoutBlock(CssRule::Import(self.parseImportAtRule(input)?)))
-			}
+				Ok(AtRuleBlockPrelude::Import(self.parseImportAtRule(input)?))
+			},
 			
 			"namespace" =>
 			{
 				if self.state > State::Namespaces
 				{
 					// "@namespace must be before any rule but @charset and @import"
-					return Err(ParseError::Custom(CustomParseError::AtRuleNamespaceMustBeBeforeAnyRuleExceptAtRuleCharsetAndAtRuleImport));
+					return Err(input.new_custom_error(CustomParseError::AtRuleNamespaceMustBeBeforeAnyRuleExceptAtRuleCharsetAndAtRuleImport));
 				}
-				
-				Ok(WithoutBlock(CssRule::Namespace(self.parseNamespaceAtRule(input)?)))
-			}
+
+				Ok(AtRuleBlockPrelude::Namespace(self.parseNamespaceAtRule(input)?))
+			},
 			
 			_ =>
 			{
@@ -65,43 +61,45 @@ impl<'i> AtRuleParser<'i> for TopLevelRuleParser
 				if self.state > State::Body
 				{
 					self.state = State::Invalid;
-					return Err(ParseError::Custom(CustomParseError::InvalidParseState));
+					return Err(input.new_custom_error(CustomParseError::InvalidParseState));
 				}
 				self.state = State::Body;
 				
 				let mut nested = self.nested();
 				<NestedRuleParser as AtRuleParser>::parse_prelude(&mut nested, name.clone(), input)
-			}
+			},
 		}
 	}
-	
+
 	#[inline]
-	fn rule_without_block(&mut self, prelude: Self::AtRule) -> Self::AtRule
+	fn rule_without_block(&mut self, prelude: Self::Prelude, _: &ParserState) -> Result<Self::AtRule, ()>
 	{
 		use self::State::*;
-		use self::CssRule::*;
+		use self::AtRuleBlockPrelude::*;
 		
 		match prelude
 		{
-			Import(..) => { self.state = Imports },
-			
-			Namespace(..) => { self.state = Namespaces },
-			
-			_ =>
-			{
-			}
+			Import(rule) => {
+				self.state = Imports;
+				Ok(CssRule::Import(rule))
+			},
+
+			Namespace(rule) => {
+				self.state = Namespaces;
+				Ok(CssRule::Namespace(rule))
+			},
+
+			_ => Err(()),
 		}
-		
-		prelude
 	}
 	
 	#[inline]
-	fn parse_block<'t>(&mut self, prelude: Self::PreludeBlock, input: &mut Parser<'i, 't>) -> Result<Self::AtRule, ParseError<'i, Self::Error>>
+	fn parse_block<'t>(&mut self, prelude: Self::Prelude, start: &ParserState, input: &mut Parser<'i, 't>) -> Result<Self::AtRule, ParseError<'i, Self::Error>>
 	{
 		let result =
 		{
 			let mut nested = self.nested();
-			<NestedRuleParser as AtRuleParser>::parse_block(&mut nested, prelude, input)
+			<NestedRuleParser as AtRuleParser>::parse_block(&mut nested, prelude, start, input)
 		};
 		match result
 		{
@@ -129,14 +127,14 @@ impl<'i> QualifiedRuleParser<'i> for TopLevelRuleParser
 		let mut nested = self.nested();
 		<NestedRuleParser as QualifiedRuleParser>::parse_prelude(&mut nested, input)
 	}
-	
+
 	#[inline]
-	fn parse_block<'t>(&mut self, prelude: Self::Prelude, input: &mut Parser<'i, 't>) -> Result<Self::QualifiedRule, ParseError<'i, Self::Error>>
+	fn parse_block<'t>(&mut self, prelude: Self::Prelude, start: &ParserState, input: &mut Parser<'i, 't>) -> Result<Self::QualifiedRule, ParseError<'i, Self::Error>>
 	{
 		let result =
 		{
 			let mut nested = self.nested();
-			<NestedRuleParser as QualifiedRuleParser>::parse_block(&mut nested, prelude, input)
+			<NestedRuleParser as QualifiedRuleParser>::parse_block(&mut nested, prelude, start, input)
 		};
 		match result
 		{
@@ -178,7 +176,7 @@ impl TopLevelRuleParser
 	#[inline(always)]
 	fn parseNamespaceAtRule<'i, 't>(&mut self, input: &mut Parser<'i, 't>) -> Result<NamespaceAtRule, ParseError<'i, CustomParseError<'i>>>
 	{
-		let prefix: Result<_, ParseError<CustomParseError>> = input.try(|i|
+		let prefix: Result<_, ParseError<CustomParseError>> = input.r#try(|i|
 		{
 			let ident: &CowRcStr = i.expect_ident()?;
 			Ok(NamespacePrefix(Atom::from(ident)))
@@ -189,10 +187,11 @@ impl TopLevelRuleParser
 		let url = match input.expect_url_or_string()
 		{
 			Ok(url_or_string) => NamespaceUrl(Atom::from(url_or_string)),
-			
-			Err(BasicParseError::UnexpectedToken(token)) => return Err(ParseError::Custom(CustomParseError::UnexpectedTokenForAtNamespaceRuleNamespaceValue(token.clone()))),
-			
-			Err(error) => return Err(ParseError::Basic(error)),
+
+			Err(e) => return Err(match e.kind {
+				BasicParseErrorKind::UnexpectedToken(t) => input.new_custom_error(CustomParseError::UnexpectedTokenForAtNamespaceRuleNamespaceValue(t.clone())),
+				_ => e.into(),
+			}),
 		};
 		
 		Rc::get_mut(&mut self.namespaces).expect("@namespace rules are parsed before css selectors so no other references to self.namespaces should exist").update(prefix.as_ref(), &url);

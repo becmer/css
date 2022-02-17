@@ -246,13 +246,16 @@ impl<NumberX: CssNumber> Unit for LengthUnit<NumberX>
 		
 		let functionParser = match *input.next()?
 		{
-			Token::Number { value, .. } => return Self::parseUnitLessNumber(value, context.parsing_mode_allows_unitless_lengths()).map(|value| Constant(value)),
+			Token::Number { value, .. } => return Self::parseUnitLessNumber(value, context.parsing_mode_allows_unitless_lengths()).map(|value| Constant(value)).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Dimension { value, ref unit, .. } => return Self::parseDimension(value, unit, context.isNotInPageRule()).map(Constant),
+			Token::Dimension { value, ref unit, .. } => return Self::parseDimension(value, unit, context.isNotInPageRule()).map(Constant).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Function(ref name) => FunctionParser::parser(name)?,
+			Token::Function(ref name) => FunctionParser::parser(name).map_err(|error| input.new_custom_error(error))?,
 			
-			ref unexpectedToken @ _ => return CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken @ _ => {
+				let unexpectedToken = unexpectedToken.clone();
+				return Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		};
 		functionParser.parse_one_outside_calc_function(context, input)
 	}
@@ -264,17 +267,20 @@ impl<NumberX: CssNumber> Unit for LengthUnit<NumberX>
 		
 		let functionParser = match *input.next()?
 		{
-			Token::Number { value, .. } => return Self::number_inside_calc_function(value),
+			Token::Number { value, .. } => return Self::number_inside_calc_function(value).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Left(Percentage(value))),
+			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Left(Percentage(value))).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Dimension { value, ref unit, .. } => return Self::parseDimension(value, unit, context.isNotInPageRule()).map(|value| Left(Constant(value))),
+			Token::Dimension { value, ref unit, .. } => return Self::parseDimension(value, unit, context.isNotInPageRule()).map(|value| Left(Constant(value))).map_err(|error| input.new_custom_error(error)),
 			
 			Token::ParenthesisBlock => FunctionParser::parentheses,
 			
-			Token::Function(ref name) => FunctionParser::parser(name)?,
+			Token::Function(ref name) => FunctionParser::parser(name).map_err(|error| input.new_custom_error(error))?,
 			
-			ref unexpectedToken @ _ => return CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken @ _ => {
+				let unexpectedToken = unexpectedToken.clone();
+				return Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		};
 		functionParser.parse_one_inside_calc_function(context, input)
 	}
@@ -302,11 +308,14 @@ impl<NumberX: CssNumber> Unit for LengthUnit<NumberX>
 		{
 			let value = match *input.next()?
 			{
-				Token::Number { value, .. } => LengthUnit::parseUnitLessNumber(value, false),
+				Token::Number { value, .. } => LengthUnit::parseUnitLessNumber(value, false).map_err(|error| input.new_custom_error(error)),
 				
-				Token::Dimension { value, ref unit, .. } => LengthUnit::parseDimension(value, unit, is_not_in_page_rule),
+				Token::Dimension { value, ref unit, .. } => LengthUnit::parseDimension(value, unit, is_not_in_page_rule).map_err(|error| input.new_custom_error(error)),
 				
-				ref unexpectedToken @ _ => CustomParseError::unexpectedToken(unexpectedToken),
+				ref unexpectedToken @ _ => {
+					let unexpectedToken = unexpectedToken.clone();
+					Err(input.new_unexpected_token_error(unexpectedToken))
+				},
 			};
 			
 			input.skip_whitespace();
@@ -373,7 +382,7 @@ impl<Number: CssNumber> LengthUnit<Number>
 	}
 	
 	#[inline(always)]
-	fn parseUnitLessNumber<'i>(value: f32, parsing_mode_allows_unitless_lengths: bool) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
+	fn parseUnitLessNumber<'i>(value: f32, parsing_mode_allows_unitless_lengths: bool) -> Result<Self, CustomParseError<'i>>
 	{
 		if value == 0.
 		{
@@ -381,19 +390,19 @@ impl<Number: CssNumber> LengthUnit<Number>
 		}
 		else if parsing_mode_allows_unitless_lengths
 		{
-			let cssNumber = Number::new(value).map_err(|cssNumberConversionError| ParseError::Custom(CouldNotParseCssSignedNumber(cssNumberConversionError, value)))?;
+			let cssNumber = Number::new(value).map_err(|cssNumberConversionError| CustomParseError::CouldNotParseCssSignedNumber(cssNumberConversionError, value))?;
 			return Ok(Absolute(px(cssNumber)))
 		}
 		else
 		{
-			return CustomParseError::dimensionless(value)
+			return Err(CustomParseError::CouldNotParseDimensionLessNumber(value))
 		}
 	}
 	
 	#[inline(always)]
-	fn parseDimension<'i>(value: f32, unit: &CowRcStr<'i>, is_not_in_page_rule: bool) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
+	fn parseDimension<'i>(value: f32, unit: &CowRcStr<'i>, is_not_in_page_rule: bool) -> Result<Self, CustomParseError<'i>>
 	{
-		let cssNumber = Number::new(value).map_err(|cssNumberConversionError| ParseError::Custom(CouldNotParseCssSignedNumber(cssNumberConversionError, value)))?;
+		let cssNumber = Number::new(value).map_err(|cssNumberConversionError| CouldNotParseCssSignedNumber(cssNumberConversionError, value))?;
 		
 		match_ignore_ascii_case!
 		{
@@ -419,7 +428,7 @@ impl<Number: CssNumber> LengthUnit<Number>
 			}
 			else
 			{
-				Err(ParseError::Custom(CustomParseError::FontRelativeLengthsAreNotAllowedInAPageAtRule))
+				Err(CustomParseError::FontRelativeLengthsAreNotAllowedInAPageAtRule)
 			},
 			
 			"ex" => if is_not_in_page_rule
@@ -428,7 +437,7 @@ impl<Number: CssNumber> LengthUnit<Number>
 			}
 			else
 			{
-				Err(ParseError::Custom(CustomParseError::FontRelativeLengthsAreNotAllowedInAPageAtRule))
+				Err(CustomParseError::FontRelativeLengthsAreNotAllowedInAPageAtRule)
 			},
 			
 			"ch" => Ok(FontRelative(ch(cssNumber))),
@@ -441,7 +450,7 @@ impl<Number: CssNumber> LengthUnit<Number>
 			}
 			else
 			{
-				Err(ParseError::Custom(CustomParseError::ViewportLengthsAreNotAllowedInAPageAtRule))
+				Err(CustomParseError::ViewportLengthsAreNotAllowedInAPageAtRule)
 			},
 			
 			"vh" => if is_not_in_page_rule
@@ -450,7 +459,7 @@ impl<Number: CssNumber> LengthUnit<Number>
 			}
 			else
 			{
-				Err(ParseError::Custom(CustomParseError::ViewportLengthsAreNotAllowedInAPageAtRule))
+				Err(CustomParseError::ViewportLengthsAreNotAllowedInAPageAtRule)
 			},
 			
 			"vmin" => if is_not_in_page_rule
@@ -459,7 +468,7 @@ impl<Number: CssNumber> LengthUnit<Number>
 			}
 			else
 			{
-				Err(ParseError::Custom(CustomParseError::ViewportLengthsAreNotAllowedInAPageAtRule))
+				Err(CustomParseError::ViewportLengthsAreNotAllowedInAPageAtRule)
 			},
 			
 			"vmax" => if is_not_in_page_rule
@@ -468,10 +477,10 @@ impl<Number: CssNumber> LengthUnit<Number>
 			}
 			else
 			{
-				Err(ParseError::Custom(CustomParseError::ViewportLengthsAreNotAllowedInAPageAtRule))
+				Err(CustomParseError::ViewportLengthsAreNotAllowedInAPageAtRule)
 			},
 			
-			_ => Err(ParseError::Custom(CouldNotParseDimension(value, unit.clone()))),
+			_ => Err(CouldNotParseDimension(value, unit.clone())),
 		}
 	}
 }

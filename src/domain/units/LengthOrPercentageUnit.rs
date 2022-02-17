@@ -231,15 +231,18 @@ impl<NumberX: CssNumber> Unit for LengthOrPercentageUnit<NumberX>
 		
 		let functionParser = match *input.next()?
 		{
-			Token::Number { value, .. } => return LengthUnit::parseUnitLessNumber(value, context.parsing_mode_allows_unitless_lengths()).map(|value| Constant(IsLength(value))),
+			Token::Number { value, .. } => return LengthUnit::parseUnitLessNumber(value, context.parsing_mode_allows_unitless_lengths()).map(|value| Constant(IsLength(value))).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Dimension { value, ref unit, .. } => return LengthUnit::parseDimension(value, unit, context.isNotInPageRule()).map(|value| Constant(IsLength(value))),
+			Token::Dimension { value, ref unit, .. } => return LengthUnit::parseDimension(value, unit, context.isNotInPageRule()).map(|value| Constant(IsLength(value))).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Constant(IsPercentage(value))),
+			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Constant(IsPercentage(value))).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Function(ref name) => FunctionParser::parser(name)?,
+			Token::Function(ref name) => FunctionParser::parser(name).map_err(|error| input.new_custom_error(error))?,
 			
-			ref unexpectedToken @ _ => return CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken @ _ => {
+				let unexpectedToken = unexpectedToken.clone();
+				return Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		};
 		functionParser.parse_one_outside_calc_function(context, input)
 	}
@@ -252,17 +255,20 @@ impl<NumberX: CssNumber> Unit for LengthOrPercentageUnit<NumberX>
 		
 		let functionParser = match *input.next()?
 		{
-			Token::Number { value, .. } => return Self::number_inside_calc_function(value),
+			Token::Number { value, .. } => return Self::number_inside_calc_function(value).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Dimension { value, ref unit, .. } => return LengthUnit::parseDimension(value, unit, context.isNotInPageRule()).map(|value| Left(Constant(IsLength(value)))),
+			Token::Dimension { value, ref unit, .. } => return LengthUnit::parseDimension(value, unit, context.isNotInPageRule()).map(|value| Left(Constant(IsLength(value)))).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Left(Constant(IsPercentage(value)))),
+			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Left(Constant(IsPercentage(value)))).map_err(|error| input.new_custom_error(error)),
 			
 			Token::ParenthesisBlock => FunctionParser::parentheses,
 			
-			Token::Function(ref name) => FunctionParser::parser(name)?,
+			Token::Function(ref name) => FunctionParser::parser(name).map_err(|error| input.new_custom_error(error))?,
 			
-			ref unexpectedToken @ _ => return CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken @ _ => {
+				let unexpectedToken = unexpectedToken.clone();
+				return Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		};
 		functionParser.parse_one_inside_calc_function(context, input)
 	}
@@ -288,13 +294,16 @@ impl<NumberX: CssNumber> Unit for LengthOrPercentageUnit<NumberX>
 		{
 			let value = match *input.next()?
 			{
-				Token::Number { value, .. } => LengthUnit::parseUnitLessNumber(value, false).map(IsLength),
+				Token::Number { value, .. } => LengthUnit::parseUnitLessNumber(value, false).map(IsLength).map_err(|error| input.new_custom_error(error)),
 				
-				Token::Percentage { unit_value, .. } => PercentageUnit::parse_percentage(unit_value).map(|value| IsPercentage(value)),
+				Token::Percentage { unit_value, .. } => PercentageUnit::parse_percentage(unit_value).map(|value| IsPercentage(value)).map_err(|error| input.new_custom_error(error)),
 				
-				Token::Dimension { value, ref unit, .. } => LengthUnit::parseDimension(value, unit, is_not_in_page_rule).map(IsLength),
+				Token::Dimension { value, ref unit, .. } => LengthUnit::parseDimension(value, unit, is_not_in_page_rule).map(IsLength).map_err(|error| input.new_custom_error(error)),
 				
-				ref unexpectedToken @ _ => CustomParseError::unexpectedToken(unexpectedToken),
+				ref unexpectedToken @ _ => {
+					let unexpectedToken = unexpectedToken.clone();
+					Err(input.new_unexpected_token_error(unexpectedToken))
+				},
 			};
 			
 			input.skip_whitespace();

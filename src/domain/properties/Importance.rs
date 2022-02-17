@@ -39,7 +39,7 @@ impl ToCss for Importance
 impl HasImportance for Importance
 {
 	#[inline(always)]
-	fn validateParsedImportance<'i>(importance: Importance) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
+	fn validateParsedImportance<'i>(importance: Importance) -> Result<Self, CustomParseError<'i>>
 	{
 		Ok(importance)
 	}
@@ -74,6 +74,6 @@ impl Importance
 	#[inline(always)]
 	pub(crate) fn parse<'i, 't>(input: &mut Parser<'i, 't>) -> Self
 	{
-		Self::from_bool(input.try(parse_important).is_ok())
+		Self::from_bool(input.r#try(parse_important).is_ok())
 	}
 }

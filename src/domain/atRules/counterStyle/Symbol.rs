@@ -29,7 +29,10 @@ impl Parse for Symbol
 			
 			Ok(&Token::Ident(ref s)) => Ok(Ident(s.as_ref().to_owned())),
 			
-			Ok(token) => Err(BasicParseError::UnexpectedToken(token.clone()).into()),
+			Ok(token) => {
+				let token = token.clone();
+				Err(input.new_unexpected_token_error(token))
+			},
 			
 			Err(e) => Err(e.into()),
 		}

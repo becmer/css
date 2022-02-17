@@ -80,11 +80,7 @@ impl<I: HasImportance> PropertyDeclarations<I>
 		
 		while let Some(propertyDeclaration) = parsedPropertyDeclarations.next()
 		{
-			match propertyDeclaration
-			{
-				Ok(propertyDeclaration) => propertyDeclarations.push(propertyDeclaration),
-				Err(preciseParseError) => return Err(preciseParseError.error),
-			}
+			propertyDeclarations.push(propertyDeclaration.map_err(|(error, _)| error)?);
 		}
 		
 		Ok(PropertyDeclarations(propertyDeclarations))

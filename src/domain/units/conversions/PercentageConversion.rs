@@ -4,6 +4,5 @@
 
 pub trait PercentageConversion<Number: CssNumber>
 {
-	#[inline(always)]
 	fn one_hundred_percent_in_absolute_units(&self) -> Number;
 }

@@ -22,7 +22,6 @@ use self::numbers::*;
 use self::properties::*;
 use self::units::*;
 use ::precomputed_hash::PrecomputedHash;
-use ::std::ascii::AsciiExt;
 use ::std::borrow::Borrow;
 use ::std::borrow::Cow;
 use ::std::cmp::PartialEq;

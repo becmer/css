@@ -4,18 +4,13 @@
 
 pub trait HasPropertyDeclarations<I: HasImportance>
 {
-	#[inline(always)]
 	fn property_declarations(&self) -> &PropertyDeclarations<I>;
-	
-	#[inline(always)]
+
 	fn property_declarations_mut(&mut self) -> &mut PropertyDeclarations<I>;
-	
-	#[inline(always)]
+
 	fn property_declarations_slice(&self) -> &[PropertyDeclaration<I>];
-	
-	#[inline(always)]
+
 	fn property_declarations_vec(&self) -> &Vec<PropertyDeclaration<I>>;
-	
-	#[inline(always)]
+
 	fn property_declarations_vec_mut(&mut self) -> &mut Vec<PropertyDeclaration<I>>;
 }

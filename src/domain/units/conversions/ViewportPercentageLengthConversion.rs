@@ -4,15 +4,11 @@
 
 pub trait ViewportPercentageLengthConversion<Number: CssNumber>
 {
-	#[inline(always)]
 	fn vw(&self) -> Number;
-	
-	#[inline(always)]
+
 	fn vh(&self) -> Number;
-	
-	#[inline(always)]
+
 	fn vmin(&self) -> Number;
-	
-	#[inline(always)]
+
 	fn vmax(&self) -> Number;
 }

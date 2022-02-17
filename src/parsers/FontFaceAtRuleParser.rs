@@ -11,9 +11,7 @@ pub(crate) struct FontFaceAtRuleParser<'a>
 /// Default methods reject all at rules.
 impl<'a, 'i> AtRuleParser<'i> for FontFaceAtRuleParser<'a>
 {
-	type PreludeNoBlock = ();
-	
-	type PreludeBlock = ();
+	type Prelude = ();
 	
 	type AtRule = ();
 	
@@ -52,7 +50,7 @@ impl<'a, 'i> DeclarationParser<'i> for FontFaceAtRuleParser<'a>
 			
 			"font-language-override" => self.rule.language_override = Some(input.parse_entirely(|i| FontLanguageOverride::parse(i))?),
 			
-			_ => return Err(ParseError::Custom(CustomParseError::UnsupportedFontFaceProperty(name.clone())))
+			_ => return Err(input.new_custom_error(CustomParseError::UnsupportedFontFaceProperty(name.clone())))
 		}
 		
 		Ok(())

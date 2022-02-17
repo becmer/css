@@ -4,6 +4,5 @@
 
 pub trait CssVariableConversion
 {
-	#[inline(always)]
 	fn cssVariableValue(&self, css_variable_lower_case_name_without_leading_double_dash: &str) -> Option<&str>;
 }

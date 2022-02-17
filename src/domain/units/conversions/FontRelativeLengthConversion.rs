@@ -4,15 +4,11 @@
 
 pub trait FontRelativeLengthConversion<Number: CssNumber>
 {
-	#[inline(always)]
 	fn em(&self) -> Number;
-	
-	#[inline(always)]
+
 	fn ex(&self) -> Number;
-	
-	#[inline(always)]
+
 	fn ch(&self) -> Number;
-	
-	#[inline(always)]
+
 	fn rem(&self) -> Number;
 }

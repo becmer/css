@@ -69,11 +69,11 @@ macro_rules! __define_css_keyword_enum__actual
 			pub(crate) fn parse<'i, 't>(input: &mut ::cssparser::Parser<'i, 't>) -> Result<$name, ::cssparser::ParseError<'i, $crate::CustomParseError<'i>>>
 			{
 				let ident = input.expect_ident()?;
-				Self::from_ident(&ident).map_err(|()| ParseError::Basic(BasicParseError::UnexpectedToken(Token::Ident(ident.clone()))))
+				Self::from_ident(&ident).map_err(|ident| input.new_unexpected_token_error(Token::Ident(ident)))
 			}
 
 			/// Parse this property from an already-tokenized identifier.
-			pub(crate) fn from_ident(ident: &str) -> Result<$name, ()>
+			pub(crate) fn from_ident<'i>(ident: &CowRcStr<'i>) -> Result<$name, CowRcStr<'i>>
 			{
 				match_ignore_ascii_case!
 				{
@@ -83,7 +83,7 @@ macro_rules! __define_css_keyword_enum__actual
 					
 					$( $alias => Ok($name::$alias_variant), )*
 					
-					_ => Err(())
+					_ => Err(ident.clone())
 				}
 			}
 		}

@@ -596,7 +596,7 @@ impl ToCss for OpenTypeLanguageTag
 {
 	fn to_css<W: fmt::Write>(&self, dest: &mut W) -> fmt::Result
 	{
-		use self::OpenTypeLanguageTag::*;;
+		use self::OpenTypeLanguageTag::*;
 		
 		match *self
 		{
@@ -1191,7 +1191,7 @@ impl ToCss for OpenTypeLanguageTag
 
 impl OpenTypeLanguageTag
 {
-	pub(crate) fn parse<'i>(tag: &'i CowRcStr) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
+	pub(crate) fn parse<'i>(tag: &'i CowRcStr) -> Result<Self, CustomParseError<'i>>
 	{
 		use self::OpenTypeLanguageTag::*;
 		
@@ -1783,7 +1783,7 @@ impl OpenTypeLanguageTag
 			"ZUL" => Ok(ZUL),
 			"ZZA" => Ok(ZZA),
 			
-			_ => Err(ParseError::Custom(CustomParseError::InvalidFontLanguageOverrideOpenTypeLanguageTag(tag.clone()))),
+			_ => Err(CustomParseError::InvalidFontLanguageOverrideOpenTypeLanguageTag(tag.clone())),
 		}
 	}
 }

@@ -96,7 +96,7 @@ impl Add<CssSignedNumber> for CssSignedNumber
 	#[inline(always)]
 	fn add(self, rhs: CssSignedNumber) -> Self::Output
 	{
-		Self::clamp(self.to_f32() + rhs.0)
+		<Self as crate::numbers::CssNumber>::clamp(self.to_f32() + rhs.0)
 	}
 }
 
@@ -116,7 +116,7 @@ impl Sub<CssSignedNumber> for CssSignedNumber
 	#[inline(always)]
 	fn sub(self, rhs: CssSignedNumber) -> Self::Output
 	{
-		Self::clamp(self.to_f32() - rhs.0)
+		<Self as crate::numbers::CssNumber>::clamp(self.to_f32() - rhs.0)
 	}
 }
 
@@ -136,7 +136,7 @@ impl Mul<CssSignedNumber> for CssSignedNumber
 	#[inline(always)]
 	fn mul(self, rhs: CssSignedNumber) -> Self::Output
 	{
-		Self::clamp(self.to_f32() * rhs.0)
+		<Self as crate::numbers::CssNumber>::clamp(self.to_f32() * rhs.0)
 	}
 }
 
@@ -170,7 +170,7 @@ impl Div<CssSignedNumber> for CssSignedNumber
 		}
 		else
 		{
-			Self::clamp(self.to_f32() / rhs.0)
+			<Self as crate::numbers::CssNumber>::clamp(self.to_f32() / rhs.0)
 		}
 	}
 }
@@ -205,7 +205,7 @@ impl Rem<CssSignedNumber> for CssSignedNumber
 		}
 		else
 		{
-			Self::clamp(self.to_f32() % rhs.0)
+			<Self as crate::numbers::CssNumber>::clamp(self.to_f32() % rhs.0)
 		}
 	}
 }
@@ -344,9 +344,9 @@ impl CssNumber for CssSignedNumber
 	}
 	
 	#[inline(always)]
-	fn parseNumber<'i>(value: f32, _int_value: Option<i32>) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
+	fn parseNumber<'i>(value: f32, _int_value: Option<i32>) -> Result<Self, CustomParseError<'i>>
 	{
-		CssSignedNumber::new(value).map_err(|cssNumberConversionError| ParseError::Custom(CouldNotParseCssSignedNumber(cssNumberConversionError, value)))
+		CssSignedNumber::new(value).map_err(|cssNumberConversionError| CouldNotParseCssSignedNumber(cssNumberConversionError, value))
 	}
 }
 
@@ -387,11 +387,14 @@ impl Unit for CssSignedNumber
 		
 		let functionParser = match *input.next()?
 		{
-			Token::Number { value, int_value, .. } => return Self::parseNumber(value, int_value).map(Constant),
+			Token::Number { value, int_value, .. } => return Self::parseNumber(value, int_value).map(Constant).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Function(ref name) => FunctionParser::parser(name)?,
+			Token::Function(ref name) => FunctionParser::parser(name).map_err(|error| input.new_custom_error(error))?,
 			
-			ref unexpectedToken @ _ => return CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken @ _ => {
+				let unexpectedToken = unexpectedToken.clone();
+				return Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		};
 		functionParser.parse_one_outside_calc_function(context, input)
 	}
@@ -403,15 +406,18 @@ impl Unit for CssSignedNumber
 		
 		let functionParser = match *input.next()?
 		{
-			Token::Number { value, int_value, .. } => return Self::parseNumber(value, int_value).map(|value| Left(Constant(value))),
+			Token::Number { value, int_value, .. } => return Self::parseNumber(value, int_value).map(|value| Left(Constant(value))).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Left(Percentage(value))),
+			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Left(Percentage(value))).map_err(|error| input.new_custom_error(error)),
 			
 			Token::ParenthesisBlock => FunctionParser::parentheses,
 			
-			Token::Function(ref name) => FunctionParser::parser(name)?,
+			Token::Function(ref name) => FunctionParser::parser(name).map_err(|error| input.new_custom_error(error))?,
 			
-			ref unexpectedToken @ _ => return CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken @ _ => {
+				let unexpectedToken = unexpectedToken.clone();
+				return Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		};
 		functionParser.parse_one_inside_calc_function(context, input)
 	}
@@ -429,9 +435,12 @@ impl Unit for CssSignedNumber
 		{
 			let value = match *input.next()?
 			{
-				Token::Number { value, int_value, .. } => CssSignedNumber::parseNumber(value, int_value),
+				Token::Number { value, int_value, .. } => CssSignedNumber::parseNumber(value, int_value).map_err(|error| input.new_custom_error(error)),
 				
-				ref unexpectedToken @ _ => CustomParseError::unexpectedToken(unexpectedToken),
+				ref unexpectedToken @ _ => {
+					let unexpectedToken = unexpectedToken.clone();
+					Err(input.new_unexpected_token_error(unexpectedToken))
+				},
 			};
 			
 			input.skip_whitespace();

@@ -8,10 +8,8 @@ pub trait Unit: Sized + ToCss + Default + CssNumberNewType<<Self as Unit>::Numbe
 	
 	const HasDimension: bool;
 	
-	#[inline(always)]
 	fn parse_one_outside_calc_function<'i, 't>(context: &ParserContext, input: &mut Parser<'i, 't>) -> Result<CalculablePropertyValue<Self>, ParseError<'i, CustomParseError<'i>>>;
 	
-	#[inline(always)]
 	fn parse_one_inside_calc_function<'i, 't>(context: &ParserContext, input: &mut Parser<'i, 't>) -> Result<Either<CalculablePropertyValue<Self>, CalcExpression<Self>>, ParseError<'i, CustomParseError<'i>>>;
 	
 	#[inline(always)]
@@ -20,16 +18,14 @@ pub trait Unit: Sized + ToCss + Default + CssNumberNewType<<Self as Unit>::Numbe
 		self
 	}
 	
-	#[inline(always)]
 	fn to_canonical_dimension_value<Conversion: FontRelativeLengthConversion<Self::Number> + ViewportPercentageLengthConversion<Self::Number> + PercentageConversion<Self::Number>>(&self, conversion: &Conversion) -> Self::Number;
-	
-	#[inline(always)]
+
 	fn from_raw_css_for_var_expression_evaluation(value: &str, is_not_in_page_rule: bool) -> Option<Self>;
 	
 	#[inline(always)]
-	fn number_inside_calc_function<'i>(value: f32) -> Result<Either<CalculablePropertyValue<Self>, CalcExpression<Self>>, ParseError<'i, CustomParseError<'i>>>
+	fn number_inside_calc_function<'i>(value: f32) -> Result<Either<CalculablePropertyValue<Self>, CalcExpression<Self>>, CustomParseError<'i>>
 	{
-		let constant = Self::Number::new(value).map_err(|cssNumberConversionError| ParseError::Custom(CouldNotParseCssUnsignedNumber(cssNumberConversionError, value)))?;
+		let constant = Self::Number::new(value).map_err(|cssNumberConversionError| CouldNotParseCssUnsignedNumber(cssNumberConversionError, value))?;
 		Ok(Right(CalcExpression::Number(constant)))
 	}
 }

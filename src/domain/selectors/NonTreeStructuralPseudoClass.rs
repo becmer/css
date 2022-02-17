@@ -426,7 +426,7 @@ impl NonTreeStructuralPseudoClass
 	
 	//noinspection SpellCheckingInspection
 	#[inline(always)]
-	pub(crate) fn parse_without_arguments<'i>(applyVendorPrefixToPseudoClasses: &HashMap<VendorPrefixablePseudoClassName, VendorPrefix>, name: CowRcStr<'i>) -> Result<Self, ParseError<'i, SelectorParseError<'i, CustomParseError<'i>>>>
+	pub(crate) fn parse_without_arguments<'i>(applyVendorPrefixToPseudoClasses: &HashMap<VendorPrefixablePseudoClassName, VendorPrefix>, name: CowRcStr<'i>) -> Result<Self, SelectorParseError<'i, CustomParseError<'i>>>
 	{
 		use self::NonTreeStructuralPseudoClass::*;
 		use self::VendorPrefix::*;
@@ -500,7 +500,7 @@ impl NonTreeStructuralPseudoClass
 			
 			"right" => Ok(right),
 			
-			"scope" => Err(ParseError::Custom(SelectorParseError::Custom(CustomParseError::NonTreeStructuralPseudoClassScopeIsObsoleteAsOfFirefox55))),
+			"scope" => Err(SelectorParseError::Custom(CustomParseError::NonTreeStructuralPseudoClassScopeIsObsoleteAsOfFirefox55)),
 			
 			"target" => Ok(target),
 			
@@ -590,7 +590,7 @@ impl NonTreeStructuralPseudoClass
 			"-moz-autofill" => Ok(autofill(Some(moz))),
 			
 			
-			_ => Err(ParseError::Custom(SelectorParseError::UnsupportedPseudoClassOrElement(name.clone()))),
+			_ => Err(SelectorParseError::UnsupportedPseudoClassOrElement(name.clone())),
 		}
 	}
 	
@@ -633,68 +633,40 @@ impl NonTreeStructuralPseudoClass
 			"-moz-tree-row" => Ok(tree_row(Some(moz), Self::parse_tree_hover(input)?)),
 			
 			
-			_ => Err(ParseError::Custom(SelectorParseError::UnsupportedPseudoClassOrElement(name.clone()))),
+			_ => Err(input.new_custom_error(SelectorParseError::UnsupportedPseudoClassOrElement(name.clone()))),
 		}
 	}
 	
 	#[inline(always)]
 	fn parse_any<'i, 't>(input: &mut Parser<'i, 't>, ourSelectorParser: &OurSelectorParser) -> Result<DeduplicatedSelectors, ParseError<'i, SelectorParseError<'i, CustomParseError<'i>>>>
 	{
-		use ::cssparser::ParseError::*;
+		use ::cssparser::ParseErrorKind::*;
 		
-		ourSelectorParser.parse_internal(input, OurSelectorExt::is_false_if_any_selector_is_simple_and_only_uses_the_descendant_combinator).map_err(|error|
-		{
-			match error
-			{
-				Basic(error) => Basic(error),
-				Custom(customParseError) => Custom(SelectorParseError::Custom(customParseError))
-			}
-		})
+		ourSelectorParser.parse_internal(input, OurSelectorExt::is_false_if_any_selector_is_simple_and_only_uses_the_descendant_combinator).map_err(|error| error.into())
 	}
 	
 	#[inline(always)]
 	fn parse_text_directionality<'i, 't>(input: &mut Parser<'i, 't>) -> Result<TextDirectionality, ParseError<'i, SelectorParseError<'i, CustomParseError<'i>>>>
 	{
-		use ::cssparser::ParseError::*;
+		use ::cssparser::ParseErrorKind::*;
 		
-		TextDirectionality::parse(input).map_err(|error|
-		{
-			match error
-			{
-				Basic(error) => Basic(error),
-				Custom(customParseError) => Custom(SelectorParseError::Custom(customParseError))
-			}
-		})
+		TextDirectionality::parse(input).map_err(|error| error.into())
 	}
 	
 	#[inline(always)]
 	fn parse_system_metric<'i, 't>(input: &mut Parser<'i, 't>) -> Result<SystemMetric, ParseError<'i, SelectorParseError<'i, CustomParseError<'i>>>>
 	{
-		use ::cssparser::ParseError::*;
+		use ::cssparser::ParseErrorKind::*;
 		
-		SystemMetric::parse(input).map_err(|error|
-		{
-			match error
-			{
-				Basic(error) => Basic(error),
-				Custom(customParseError) => Custom(SelectorParseError::Custom(customParseError))
-			}
-		})
+		SystemMetric::parse(input).map_err(|error| error.into())
 	}
 	
 	#[inline(always)]
 	fn parse_tree_hover<'i, 't>(input: &mut Parser<'i, 't>) -> Result<TreeHover, ParseError<'i, SelectorParseError<'i, CustomParseError<'i>>>>
 	{
-		use ::cssparser::ParseError::*;
+		use ::cssparser::ParseErrorKind::*;
 		
-		TreeHover::parse(input).map_err(|error|
-		{
-			match error
-			{
-				Basic(error) => Basic(error),
-				Custom(customParseError) => Custom(SelectorParseError::Custom(customParseError))
-			}
-		})
+		TreeHover::parse(input).map_err(|error| error.into())
 	}
 	
 	#[inline(always)]

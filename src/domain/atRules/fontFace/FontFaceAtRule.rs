@@ -149,10 +149,7 @@ impl FontFaceAtRule
 			let mut iter = DeclarationListParser::new(input, parser);
 			while let Some(declaration) = iter.next()
 			{
-				if declaration.is_err()
-				{
-					return Err(declaration.unwrap_err().error);
-				}
+				declaration.map_err(|(error, _)| error)?;
 			}
 		}
 		

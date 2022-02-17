@@ -14,25 +14,27 @@ impl FontFeatureSetting
 			let openTypeFeatureTag = input.expect_string()?;
 			if openTypeFeatureTag.len() != 4
 			{
-				return Err(ParseError::Custom(CustomParseError::FontFeatureSettingOpenTypeFeatureTagMustBeFourCharacters(openTypeFeatureTag.clone())))
+				let openTypeFeatureTag = openTypeFeatureTag.clone();
+				return Err(input.new_custom_error(CustomParseError::FontFeatureSettingOpenTypeFeatureTagMustBeFourCharacters(openTypeFeatureTag)));
 			}
 			
 			for character in openTypeFeatureTag.chars()
 			{
 				if character <= '\x20' || character > '\x7E'
 				{
-					return Err(ParseError::Custom(CustomParseError::FontFeatureSettingOpenTypeFeatureTagMustBePrintableAscii(openTypeFeatureTag.clone())))
+					let openTypeFeatureTag = openTypeFeatureTag.clone();
+					return Err(input.new_custom_error(CustomParseError::FontFeatureSettingOpenTypeFeatureTagMustBePrintableAscii(openTypeFeatureTag)));
 				}
 			}
 			
 			openTypeFeatureTag.as_ref().into()
 		};
 		
-		if let Ok(integer) = input.try(|input| input.expect_integer())
+		if let Ok(integer) = input.r#try(|input| input.expect_integer())
 		{
 			if integer < 0
 			{
-				Err(ParseError::Custom(CustomParseError::FontFeatureSettingIntegerMustBePositive(integer)))
+				Err(input.new_custom_error(CustomParseError::FontFeatureSettingIntegerMustBePositive(integer)))
 			}
 			else
 			{
@@ -51,7 +53,10 @@ impl FontFeatureSetting
 				
 				"off" => Ok(FontFeatureSetting(openTypeFeatureTag, 0)),
 				
-				_ => Err(ParseError::Custom(CustomParseError::FontFeatureSettingIfNotAnIntegerMustBeOnOrOff(ident.clone())))
+				_ => {
+					let ident = ident.clone();
+					Err(input.new_custom_error(CustomParseError::FontFeatureSettingIfNotAnIntegerMustBeOnOrOff(ident)))
+				},
 			}
 		}
 	}

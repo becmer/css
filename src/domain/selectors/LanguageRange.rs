@@ -26,14 +26,14 @@ impl ToCss for LanguageRange
 			
 			match characters.next().unwrap()
 			{
-				'a' ... 'z' | 'A' ... 'Z' | '-' =>
+				'a'..='z' | 'A'..='Z' | '-' =>
 				{
 					let mut isCssIdentifier = true;
 					for character in characters
 					{
 						match character
 						{
-							'a' ... 'z' | 'A' ... 'Z' | '-' | '0' ... '9' => continue,
+							'a'..='z' | 'A'..='Z' | '-' | '0'..='9' => continue,
 							_ =>
 							{
 								isCssIdentifier = false;

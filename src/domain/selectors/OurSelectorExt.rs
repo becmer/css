@@ -4,7 +4,6 @@
 
 pub trait OurSelectorExt
 {
-	#[inline(always)]
 	fn is_false_if_any_selector_is_simple_and_only_uses_the_descendant_combinator(&self) -> bool;
 }
 

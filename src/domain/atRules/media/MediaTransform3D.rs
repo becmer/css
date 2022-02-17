@@ -32,7 +32,7 @@ impl Parse for MediaTransform3D
 		{
 			0 => false,
 			1 => true,
-			invalid @ _ => return Err(ParseError::Custom(CustomParseError::MediaTransform3DMustBeEitherZeroOrOne(invalid))),
+			invalid @ _ => return Err(input.new_custom_error(CustomParseError::MediaTransform3DMustBeEitherZeroOrOne(invalid))),
 		};
 		
 		Ok

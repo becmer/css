@@ -13,7 +13,10 @@ impl Parse for SingleValue
 		match *input.next()?
 		{
 			Token::Number { int_value: Some(value), .. } if value >= 0 => Ok(SingleValue(value as u32)),
-			ref unexpectedToken => CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken => {
+				let unexpectedToken = unexpectedToken.clone();
+				Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		}
 	}
 }

@@ -12,9 +12,7 @@ pub(crate) struct CounterStyleAtRuleParser<'a>
 /// Default methods reject all at rules.
 impl<'a, 'i> AtRuleParser<'i> for CounterStyleAtRuleParser<'a>
 {
-	type PreludeNoBlock = ();
-	
-	type PreludeBlock = ();
+	type Prelude = ();
 	
 	type AtRule = ();
 	
@@ -53,7 +51,7 @@ impl<'a, 'i> DeclarationParser<'i> for CounterStyleAtRuleParser<'a>
 			
 			"speak-as" => self.rule.speak_as = Some(input.parse_entirely(|input| Parse::parse(self.context, input))?),
 			
-			_ => return Err(ParseError::Custom(CustomParseError::UnsupportedCounterStyleProperty(name.clone())))
+			_ => return Err(input.new_custom_error(CustomParseError::UnsupportedCounterStyleProperty(name.clone())))
 		}
 		
 		Ok(())

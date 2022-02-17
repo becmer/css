@@ -125,7 +125,10 @@ impl Stylesheet
 			(
 				path.to_path_buf(),
 				cause.location,
-				format!("{:?}", cause.error),
+				match cause.kind {
+					ParseErrorKind::Basic(e) => format!("{:?}", e),
+					ParseErrorKind::Custom(e) => format!("{:?}", e),
+				},
 			)),
 			
 		}
@@ -137,7 +140,7 @@ impl Stylesheet
 	/// Does not use a stream of bytes as parsing CSS involves going backwards and forwards a lot... CSS parsing is somewhat evil and is not particularly efficient.
 	/// The parser does apply a few small modifications to the incoming CSS, normalizing some pseudo-class, psuedo-element and media query names.
 	/// The parser does not parse properties as such, simply keeping them as a CSS string. Hopefully it will one day - there are only 200 odd specialist rules to implement.
-	pub fn parse<'i>(css: &'i str) -> Result<Self, PreciseParseError<'i, CustomParseError<'i>>>
+	pub fn parse(css: &str) -> Result<Self, ParseError<CustomParseError>>
 	{
 		const LineNumberingIsZeroBased: u32 = 0;
 		
@@ -165,7 +168,7 @@ impl Stylesheet
 				match result
 				{
 					Ok(rule) => rules.push(rule),
-					Err(preciseParseError) => return Err(preciseParseError),
+					Err((preciseParseError, _)) => return Err(preciseParseError),
 				}
 			}
 		}

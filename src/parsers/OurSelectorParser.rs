@@ -10,14 +10,14 @@ pub(crate) struct OurSelectorParser<'a>
 	pub(crate) applyVendorPrefixToPseudoElements: &'a HashMap<VendorPrefixablePseudoElementName, VendorPrefix>,
 }
 
-impl<'a, 'i> ::selectors::parser::Parser<'i> for OurSelectorParser<'a>
+impl<'a, 'i> crate::selectors::parser::Parser<'i> for OurSelectorParser<'a>
 {
 	type Impl = OurSelectorImpl;
 	
 	type Error = CustomParseError<'i>;
 	
 	#[inline(always)]
-	fn parse_non_ts_pseudo_class(&self, name: CowRcStr<'i>) -> Result<<Self::Impl as SelectorImpl>::NonTSPseudoClass, ParseError<'i, SelectorParseError<'i, Self::Error>>>
+	fn parse_non_ts_pseudo_class(&self, name: CowRcStr<'i>) -> Result<<Self::Impl as SelectorImpl>::NonTSPseudoClass, SelectorParseError<'i, Self::Error>>
 	{
 		NonTreeStructuralPseudoClass::parse_without_arguments(self.applyVendorPrefixToPseudoClasses, name)
 	}
@@ -29,15 +29,15 @@ impl<'a, 'i> ::selectors::parser::Parser<'i> for OurSelectorParser<'a>
 	}
 	
 	#[inline(always)]
-	fn parse_pseudo_element(&self, name: CowRcStr<'i>) -> Result<<Self::Impl as SelectorImpl>::PseudoElement, ParseError<'i, SelectorParseError<'i, Self::Error>>>
+	fn parse_pseudo_element(&self, name: CowRcStr<'i>) -> Result<<Self::Impl as SelectorImpl>::PseudoElement, SelectorParseError<'i, Self::Error>>
 	{
 		PseudoElement::parse_without_arguments(self.applyVendorPrefixToPseudoElements, name)
 	}
 	
 	#[inline(always)]
-	fn parse_functional_pseudo_element<'t>(&self, name: CowRcStr<'i>, arguments: &mut Parser<'i, 't>) -> Result<<Self::Impl as SelectorImpl>::PseudoElement, ParseError<'i, SelectorParseError<'i, Self::Error>>>
+	fn parse_functional_pseudo_element<'t>(&self, name: CowRcStr<'i>, input: &mut Parser<'i, 't>) -> Result<<Self::Impl as SelectorImpl>::PseudoElement, ParseError<'i, SelectorParseError<'i, Self::Error>>>
 	{
-		PseudoElement::parse_with_arguments(self.applyVendorPrefixToPseudoElements, name, arguments, self)
+		PseudoElement::parse_with_arguments(self.applyVendorPrefixToPseudoElements, name, input, self)
 	}
 	
 	#[inline(always)]
@@ -64,19 +64,11 @@ impl<'a> OurSelectorParser<'a>
 	#[inline(always)]
 	pub(crate) fn parse_internal<'i, 't, F: Fn(&OurSelector) -> bool>(&self, input: &mut Parser<'i, 't>, isInvalidSelector: F) -> Result<DeduplicatedSelectors, ParseError<'i, CustomParseError<'i>>>
 	{
-		let selectors = self.parse_selectors(input).map_err(|parseError|
-		{
-			match parseError
-			{
-				// We are changing from a ParseError<SelectorParseError> to a ParseError<CustomParseError<'i>>, hence this superficially looking redundant code
-				ParseError::Basic(basicParseError) => ParseError::Basic(basicParseError),
-				ParseError::Custom(selectorParseError) => ParseError::Custom(CustomParseError::SpecificSelectorParseError(Box::new(selectorParseError))),
-			}
-		})?;
+		let selectors = self.parse_selectors(input).map_err(|error| error.into())?;
 		
 		if selectors.is_empty()
 		{
-			return Err(ParseError::Custom(CustomParseError::ThereAreNoSelectors));
+			return Err(input.new_custom_error(CustomParseError::ThereAreNoSelectors));
 		}
 		
 		let mut deduplicatedSelectors = OrderMap::with_capacity(selectors.len());
@@ -85,7 +77,7 @@ impl<'a> OurSelectorParser<'a>
 			let selectorCss = selector.to_css_string();
 			if isInvalidSelector(&selector)
 			{
-				return Err(ParseError::Custom(CustomParseError::SelectorIsInvalidInContext(selectorCss)))
+				return Err(input.new_custom_error(CustomParseError::SelectorIsInvalidInContext(selectorCss)))
 			}
 			
 			// Selector does not implement Eq or Hash... Grrr...

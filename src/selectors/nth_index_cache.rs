@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use fnv::FnvHashMap;
-use ::selectors::tree::OpaqueElement;
+use crate::selectors::tree::OpaqueElement;
 
 /// A cache to speed up matching of nth-index-like selectors.
 ///

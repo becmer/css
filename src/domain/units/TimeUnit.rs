@@ -228,14 +228,17 @@ impl<NumberX: CssNumber> Unit for TimeUnit<NumberX>
 			}
 			else
 			{
-				return CustomParseError::dimensionless(value)
+				return Err(input.new_custom_error(CustomParseError::CouldNotParseDimensionLessNumber(value)))
 			},
 			
-			Dimension { value, ref unit, .. } => return Self::parseDimension(value, unit).map(Constant),
+			Dimension { value, ref unit, .. } => return Self::parseDimension(value, unit).map(Constant).map_err(|error| input.new_custom_error(error)),
 			
-			Function(ref name) => FunctionParser::parser(name)?,
+			Function(ref name) => FunctionParser::parser(name).map_err(|error| input.new_custom_error(error))?,
 			
-			ref unexpectedToken @ _ => return CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken @ _ => {
+				let unexpectedToken = unexpectedToken.clone();
+				return Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		};
 		functionParser.parse_one_outside_calc_function(context, input)
 	}
@@ -247,17 +250,20 @@ impl<NumberX: CssNumber> Unit for TimeUnit<NumberX>
 		
 		let functionParser = match *input.next()?
 		{
-			Token::Number { value, .. } => return Self::number_inside_calc_function(value),
+			Token::Number { value, .. } => return Self::number_inside_calc_function(value).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Left(Percentage(value))),
+			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Left(Percentage(value))).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Dimension { value, ref unit, .. } => return Self::parseDimension(value, unit).map(|value| Left(Constant(value))),
+			Token::Dimension { value, ref unit, .. } => return Self::parseDimension(value, unit).map(|value| Left(Constant(value))).map_err(|error| input.new_custom_error(error)),
 			
 			Token::ParenthesisBlock => FunctionParser::parentheses,
 			
-			Token::Function(ref name) => FunctionParser::parser(name)?,
+			Token::Function(ref name) => FunctionParser::parser(name).map_err(|error| input.new_custom_error(error))?,
 			
-			ref unexpectedToken @ _ => return CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken @ _ => {
+				let unexpectedToken = unexpectedToken.clone();
+				return Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		};
 		functionParser.parse_one_inside_calc_function(context, input)
 	}
@@ -297,13 +303,16 @@ impl<NumberX: CssNumber> Unit for TimeUnit<NumberX>
 					}
 					else
 					{
-						CustomParseError::dimensionless(value)
+						Err(input.new_custom_error(CustomParseError::CouldNotParseDimensionLessNumber(value)))
 					}
 				}
 				
-				Token::Dimension { value, ref unit, .. } => TimeUnit::parseDimension(value, unit),
+				Token::Dimension { value, ref unit, .. } => TimeUnit::parseDimension(value, unit).map_err(|error| input.new_custom_error(error)),
 				
-				ref unexpectedToken @ _ => CustomParseError::unexpectedToken(unexpectedToken),
+				ref unexpectedToken @ _ => {
+					let unexpectedToken = unexpectedToken.clone();
+					Err(input.new_unexpected_token_error(unexpectedToken))
+				},
 			};
 			
 			input.skip_whitespace();
@@ -325,9 +334,9 @@ impl<NumberX: CssNumber> Unit for TimeUnit<NumberX>
 impl<Number: CssNumber> TimeUnit<Number>
 {
 	#[inline(always)]
-	fn parseDimension<'i>(value: f32, unit: &CowRcStr<'i>) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
+	fn parseDimension<'i>(value: f32, unit: &CowRcStr<'i>) -> Result<Self, CustomParseError<'i>>
 	{
-		let cssNumber = Number::new(value).map_err(|cssNumberConversionError| ParseError::Custom(CouldNotParseCssSignedNumber(cssNumberConversionError, value)))?;
+		let cssNumber = Number::new(value).map_err(|cssNumberConversionError| CouldNotParseCssSignedNumber(cssNumberConversionError, value))?;
 		
 		match_ignore_ascii_case!
 		{
@@ -337,7 +346,7 @@ impl<Number: CssNumber> TimeUnit<Number>
 			
 			"ms" => return Ok(ms(cssNumber)),
 			
-			_ => return Err(ParseError::Custom(CouldNotParseDimension(value, unit.clone()))),
+			_ => return Err(CouldNotParseDimension(value, unit.clone())),
 		}
 	}
 }

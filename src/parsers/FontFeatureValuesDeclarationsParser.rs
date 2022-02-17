@@ -13,9 +13,7 @@ struct FontFeatureValuesDeclarationsParser<'a, T: 'a + Parse + ToCss>
 /// Default methods reject all at rules.
 impl<'a, 'i, T: 'a + Parse + ToCss> AtRuleParser<'i> for FontFeatureValuesDeclarationsParser<'a, T>
 {
-	type PreludeNoBlock = ();
-	
-	type PreludeBlock = ();
+	type Prelude = ();
 	
 	type AtRule = ();
 	
@@ -55,10 +53,7 @@ impl<'a, 'b: 'a, T: 'a + Parse + ToCss> FontFeatureValuesDeclarationsParser<'a, 
 		let mut iter = DeclarationListParser::new(input, parser);
 		while let Some(possiblePreciseParseError) = iter.next()
 		{
-			if possiblePreciseParseError.is_err()
-			{
-				return Err(possiblePreciseParseError.unwrap_err().error);
-			}
+			possiblePreciseParseError.map_err(|(error, _)| error)?;
 		}
 		
 		Ok(())

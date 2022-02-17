@@ -20,11 +20,11 @@ impl Parse for Pad
 {
 	fn parse<'i, 't>(context: &ParserContext, input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
 	{
-		let pad_with = input.try(|input| Symbol::parse(context, input));
+		let pad_with = input.r#try(|input| Symbol::parse(context, input));
 		let min_length = input.expect_integer()?;
 		if min_length < 0
 		{
-			return Err(ParseError::Custom(CustomParseError::CounterStylePadMinLengthCanNotBeNegative(min_length)))
+			return Err(input.new_custom_error(CustomParseError::CounterStylePadMinLengthCanNotBeNegative(min_length)))
 		}
 		let pad_with = pad_with.or_else(|_| Symbol::parse(context, input))?;
 		Ok(Pad(min_length as u32, pad_with))

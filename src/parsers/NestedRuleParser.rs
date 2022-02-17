@@ -11,17 +11,14 @@ pub(crate) struct NestedRuleParser<'a>
 
 impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a>
 {
-	type PreludeNoBlock = CssRule;
-	
-	type PreludeBlock = AtRuleBlockPrelude;
+	type Prelude = AtRuleBlockPrelude;
 	
 	type AtRule = CssRule;
 	
 	type Error = CustomParseError<'i>;
-	
-	fn parse_prelude<'t>(&mut self, name: CowRcStr<'i>, input: &mut Parser<'i, 't>) -> Result<AtRuleType<Self::PreludeNoBlock, Self::PreludeBlock>, ParseError<'i, Self::Error>>
+
+	fn parse_prelude<'t>(&mut self, name: CowRcStr<'i>, input: &mut Parser<'i, 't>) -> Result<Self::Prelude, ParseError<'i, Self::Error>>
 	{
-		use self::AtRuleType::WithBlock;
 		use self::AtRuleBlockPrelude::*;
 		use self::VendorPrefix::*;
 		
@@ -29,44 +26,48 @@ impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a>
 		{
 			&name,
 			
-			"counter-style" => Ok(WithBlock(CounterStyle(CounterStyleIdent::parseForCounterStyleAtRule(input)?))),
+			"counter-style" => Ok(CounterStyle(CounterStyleIdent::parseForCounterStyleAtRule(input)?)),
 			
-			"document" => Ok(WithBlock(Document(None, DocumentCondition::parse(self.context, input)?))),
+			"document" => Ok(Document(None, DocumentCondition::parse(self.context, input)?)),
 			
-			"-moz-document" => Ok(WithBlock(Document(Some(moz), DocumentCondition::parse(self.context, input)?))),
+			"-moz-document" => Ok(Document(Some(moz), DocumentCondition::parse(self.context, input)?)),
 			
-			"font-face" => Ok(WithBlock(FontFace)),
+			"font-face" => Ok(FontFace),
 			
-			"font-feature-values" => Ok(WithBlock(FontFeatureValues(FamilyName::parse_family_name_list(self.context, input)?))),
+			"font-feature-values" => Ok(FontFeatureValues(FamilyName::parse_family_name_list(self.context, input)?)),
 			
-			"keyframes" => Ok(WithBlock(Keyframes(None, KeyframesName::parse(input)?))),
+			"keyframes" => Ok(Keyframes(None, KeyframesName::parse(input)?)),
 			
-			"-webkit-keyframes" => Ok(WithBlock(Keyframes(Some(webkit), KeyframesName::parse(input)?))),
+			"-webkit-keyframes" => Ok(Keyframes(Some(webkit), KeyframesName::parse(input)?)),
 			
-			"-moz-keyframes" => Ok(WithBlock(Keyframes(Some(moz), KeyframesName::parse(input)?))),
+			"-moz-keyframes" => Ok(Keyframes(Some(moz), KeyframesName::parse(input)?)),
 			
-			"media" => Ok(WithBlock(Media(MediaList::parse_media_query_list(self.context, input, false)?))),
+			"media" => Ok(Media(MediaList::parse_media_query_list(self.context, input, false)?)),
 			
-			"page" => Ok(WithBlock(Page(PageSelectorPseudoClass::parse(input)?))),
+			"page" => Ok(Page(PageSelectorPseudoClass::parse(input)?)),
 			
-			"supports" => Ok(WithBlock(Supports(SupportsCondition::parse(input)?))),
+			"supports" => Ok(Supports(SupportsCondition::parse(input)?)),
 			
-			"viewport" => Ok(WithBlock(Viewport(None))),
+			"viewport" => Ok(Viewport(None)),
 			
-			"-ms-viewport" => Ok(WithBlock(Viewport(Some(ms)))),
+			"-ms-viewport" => Ok(Viewport(Some(ms))),
 			
-			"-o-viewport" => Ok(WithBlock(Viewport(Some(o)))),
+			"-o-viewport" => Ok(Viewport(Some(o))),
 			
-			_ => Err(ParseError::Custom(CustomParseError::UnsupportedAtRule(name.clone())))
+			_ => Err(input.new_custom_error(CustomParseError::UnsupportedAtRule(name.clone())))
 		}
 	}
 	
-	fn parse_block<'t>(&mut self, prelude: AtRuleBlockPrelude, input: &mut Parser<'i, 't>) -> Result<Self::AtRule, ParseError<'i, Self::Error>>
+	fn parse_block<'t>(&mut self, prelude: Self::Prelude, _: &ParserState, input: &mut Parser<'i, 't>) -> Result<Self::AtRule, ParseError<'i, Self::Error>>
 	{
 		use self::AtRuleBlockPrelude::*;
-		
+
 		let cssRule = match prelude
 		{
+			Import(..) => return Err(input.new_error(BasicParseErrorKind::AtRuleInvalid("import".into()))),
+
+			Namespace(..) => return Err(input.new_error(BasicParseErrorKind::AtRuleInvalid("namespace".into()))),
+
 			CounterStyle(name) => CssRule::CounterStyle(CounterStyleAtRule::parse_body(name, &CssRuleType::CounterStyle.context(self), input)?),
 			
 			Document(vendor_prefix, condition) => CssRule::Document(DocumentAtRule
@@ -141,8 +142,8 @@ impl<'a, 'i> QualifiedRuleParser<'i> for NestedRuleParser<'a>
 			}
 		)
 	}
-	
-	fn parse_block<'t>(&mut self, prelude: Self::Prelude, input: &mut Parser<'i, 't>) -> Result<Self::QualifiedRule, ParseError<'i, Self::Error>>
+
+	fn parse_block<'t>(&mut self, prelude: Self::Prelude, _: &ParserState, input: &mut Parser<'i, 't>) -> Result<Self::QualifiedRule, ParseError<'i, Self::Error>>
 	{
 		let context = ParserContext::new_with_rule_type(self.context, CssRuleType::Style);
 		
@@ -181,7 +182,7 @@ impl<'a> NestedRuleParser<'a>
 			match result
 			{
 				Ok(rule) => rules.push(rule),
-				Err(preciseParseError) => return Err(preciseParseError.error),
+				Err((preciseParseError, _)) => return Err(preciseParseError),
 			}
 		}
 		Ok(CssRules(rules))

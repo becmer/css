@@ -34,7 +34,7 @@ impl Parse for FontFeatureSettings
 {
 	fn parse<'i, 't>(_: &ParserContext, input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
 	{
-		if input.try(|input| input.expect_ident_matching("normal")).is_ok()
+		if input.r#try(|input| input.expect_ident_matching("normal")).is_ok()
 		{
 			Ok(FontFeatureSettings(BTreeMap::new()))
 		}

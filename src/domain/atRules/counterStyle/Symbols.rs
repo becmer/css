@@ -29,7 +29,7 @@ impl Parse for Symbols
 		let mut symbols = Vec::new();
 		loop
 		{
-			if let Ok(s) = input.try(|input| Symbol::parse(context, input))
+			if let Ok(s) = input.r#try(|input| Symbol::parse(context, input))
 			{
 				symbols.push(s)
 			}
@@ -37,7 +37,7 @@ impl Parse for Symbols
 			{
 				if symbols.is_empty()
 				{
-					return Err(ParseError::Custom(CustomParseError::CounterStyleSymbolsCanNotBeEmpty))
+					return Err(input.new_custom_error(CustomParseError::CounterStyleSymbolsCanNotBeEmpty))
 				}
 				else
 				{

@@ -56,13 +56,13 @@ impl Parse for System
             
             "fixed" =>
             {
-                let first_symbol_value = input.try(|i| i.expect_integer()).ok();
+                let first_symbol_value = input.r#try(|i| i.expect_integer()).ok();
                 Ok(Fixed { first_symbol_value })
-            }
+            },
             
             "extends" =>  Ok(Extends(CounterStyleIdent::parse(input)?)),
             
-            _ => Err(ParseError::Custom(CustomParseError::CounterStyleSystemIsNotKnown(identifier.clone()))),
+            _ => Err(input.new_custom_error(CustomParseError::CounterStyleSystemIsNotKnown(identifier.clone()))),
         }
 	}
 }

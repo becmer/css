@@ -128,15 +128,15 @@ impl SpecifiedValue
 					token.serialization_type()
 				}
 				
-				BadUrl(url) => return Err(ParseError::Custom(CustomParseError::BadUrlInDeclarationValueBlock(url))),
+				BadUrl(url) => return Err(input.new_custom_error(CustomParseError::BadUrlInDeclarationValueBlock(url))),
 				
-				BadString(string) => return Err(ParseError::Custom(CustomParseError::BadStringInDeclarationValueBlock(string))),
+				BadString(string) => return Err(input.new_custom_error(CustomParseError::BadStringInDeclarationValueBlock(string))),
 				
-				CloseParenthesis => return Err(ParseError::Custom(CustomParseError::UnbalancedCloseParenthesisInDeclarationValueBlock)),
+				CloseParenthesis => return Err(input.new_custom_error(CustomParseError::UnbalancedCloseParenthesisInDeclarationValueBlock)),
 				
-				CloseSquareBracket => return Err(ParseError::Custom(CustomParseError::UnbalancedCloseSquareBracketInDeclarationValueBlock)),
+				CloseSquareBracket => return Err(input.new_custom_error(CustomParseError::UnbalancedCloseParenthesisInDeclarationValueBlock)),
 				
-				CloseCurlyBracket => return Err(ParseError::Custom(CustomParseError::UnbalancedCloseCurlyBracketInDeclarationValueBlock)),
+				CloseCurlyBracket => return Err(input.new_custom_error(CustomParseError::UnbalancedCloseParenthesisInDeclarationValueBlock)),
 				
 				Function(ref name) =>
 				{
@@ -223,7 +223,7 @@ impl SpecifiedValue
 	fn parse_var_function<'i, 't>(input: &mut Parser<'i, 't>, references: &mut Option<HashSet<Atom>>) -> Result<(), ParseError<'i, CustomParseError<'i>>>
 	{
 		let name = input.expect_ident_cloned()?;
-		if input.try(|input| input.expect_comma()).is_ok()
+		if input.r#try(|input| input.expect_comma()).is_ok()
 		{
 			// Exclude `!` and `;` at the top level
 			// https://drafts.csswg.org/css-syntax/#typedef-declaration-value

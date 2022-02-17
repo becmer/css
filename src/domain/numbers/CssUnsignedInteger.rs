@@ -323,7 +323,7 @@ impl CssNumber for CssUnsignedInteger
 	}
 	
 	#[inline(always)]
-	fn parseNumber<'i>(value: f32, int_value: Option<i32>) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
+	fn parseNumber<'i>(value: f32, int_value: Option<i32>) -> Result<Self, CustomParseError<'i>>
 	{
 		if let Some(constant) = int_value
 		{
@@ -333,12 +333,12 @@ impl CssNumber for CssUnsignedInteger
 			}
 			else
 			{
-				Err(ParseError::Custom(CustomParseError::UnsignedIntegersCanNotBeNegative(constant)))
+				Err(CustomParseError::UnsignedIntegersCanNotBeNegative(constant))
 			}
 		}
 		else
 		{
-			Err(ParseError::Custom(CustomParseError::UnsignedIntegersCanNotBeFloats(value)))
+			Err(CustomParseError::UnsignedIntegersCanNotBeFloats(value))
 		}
 	}
 }
@@ -380,11 +380,14 @@ impl Unit for CssUnsignedInteger
 		
 		let functionParser = match *input.next()?
 		{
-			Token::Number { int_value, value, .. } => return Self::parseNumber(value, int_value).map(Constant),
+			Token::Number { int_value, value, .. } => return Self::parseNumber(value, int_value).map(Constant).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Function(ref name) => FunctionParser::parser(name)?,
+			Token::Function(ref name) => FunctionParser::parser(name).map_err(|error| input.new_custom_error(error))?,
 			
-			ref unexpectedToken @ _ => return CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken @ _ => {
+				let unexpectedToken = unexpectedToken.clone();
+				return Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		};
 		functionParser.parse_one_outside_calc_function(context, input)
 	}
@@ -395,15 +398,18 @@ impl Unit for CssUnsignedInteger
 		
 		let functionParser = match *input.next()?
 		{
-			Token::Number { value, int_value, .. } => return Self::parseNumber(value, int_value).map(|value| Left(Constant(value))),
+			Token::Number { value, int_value, .. } => return Self::parseNumber(value, int_value).map(|value| Left(Constant(value))).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Left(Percentage(value))),
+			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Left(Percentage(value))).map_err(|error| input.new_custom_error(error)),
 			
 			Token::ParenthesisBlock => FunctionParser::parentheses,
 			
-			Token::Function(ref name) => FunctionParser::parser(name)?,
+			Token::Function(ref name) => FunctionParser::parser(name).map_err(|error| input.new_custom_error(error))?,
 			
-			ref unexpectedToken @ _ => return CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken @ _ => {
+				let unexpectedToken = unexpectedToken.clone();
+				return Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		};
 		functionParser.parse_one_inside_calc_function(context, input)
 	}
@@ -421,9 +427,12 @@ impl Unit for CssUnsignedInteger
 		{
 			let value = match *input.next()?
 			{
-				Token::Number { value, int_value, .. } => CssUnsignedInteger::parseNumber(value, int_value),
+				Token::Number { value, int_value, .. } => CssUnsignedInteger::parseNumber(value, int_value).map_err(|error| input.new_custom_error(error)),
 				
-				ref unexpectedToken @ _ => CustomParseError::unexpectedToken(unexpectedToken),
+				ref unexpectedToken @ _ => {
+					let unexpectedToken = unexpectedToken.clone();
+					Err(input.new_unexpected_token_error(unexpectedToken))
+				},
 			};
 			
 			input.skip_whitespace();

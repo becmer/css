@@ -53,7 +53,7 @@ impl Parse for SpeakAs
 	{
 		use self::SpeakAs::*;
 		
-		let result = input.try(|input|
+		let result = input.r#try(|input|
 		{
 			let ident = input.expect_ident().map_err(|_| ())?;
 			match_ignore_ascii_case!

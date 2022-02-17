@@ -63,7 +63,8 @@ impl VarExpression
 				let identifier = input.expect_ident()?;
 				if !identifier.starts_with("--")
 				{
-					return Err(ParseError::Custom(CustomParseError::CssVariablesInVarExpressionsMustStartWithTwoDashes(identifier.clone())))
+					let identifier = identifier.clone();
+					return Err(input.new_custom_error(CustomParseError::CssVariablesInVarExpressionsMustStartWithTwoDashes(identifier)))
 				}
 				let mut custom_property_lower_case_name_without_double_dash = (&identifier[2..]).to_owned();
 				custom_property_lower_case_name_without_double_dash.make_ascii_lowercase();
@@ -72,7 +73,7 @@ impl VarExpression
 			
 			let startPosition = input.position();
 			
-			let result = input.try(|input|
+			let result = input.r#try(|input|
 			{
 				input.expect_comma()?;
 				input.skip_whitespace();

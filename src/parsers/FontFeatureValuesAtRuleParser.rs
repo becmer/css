@@ -26,60 +26,48 @@ impl<'a, 'i> QualifiedRuleParser<'i> for FontFeatureValuesAtRuleParser<'a>
 
 impl<'a, 'i> AtRuleParser<'i> for FontFeatureValuesAtRuleParser<'a>
 {
-	type PreludeNoBlock = ();
-	
-	type PreludeBlock = FontFeatureValuesBlockType;
+	type Prelude = FontFeatureValuesBlockType;
 	
 	type AtRule = ();
 	
 	type Error = CustomParseError<'i>;
 	
-	fn parse_prelude<'t>(&mut self, name: CowRcStr<'i>, _input: &mut Parser<'i, 't>) -> Result<AtRuleType<Self::PreludeNoBlock, Self::PreludeBlock>, ParseError<'i, Self::Error>>
+	fn parse_prelude<'t>(&mut self, name: CowRcStr<'i>, input: &mut Parser<'i, 't>) -> Result<Self::Prelude, ParseError<'i, Self::Error>>
 	{
-		use self::AtRuleType::WithBlock;
 		use self::FontFeatureValuesBlockType::*;
 		
 		match_ignore_ascii_case!
 		{
 			&*name,
 			
-			"swash" => Ok(WithBlock(swash)),
+			"swash" => Ok(swash),
 			
-			"stylistic" => Ok(WithBlock(stylistic)),
+			"stylistic" => Ok(stylistic),
 			
-			"ornaments" => Ok(WithBlock(ornaments)),
+			"ornaments" => Ok(ornaments),
 			
-			"annotation" => Ok(WithBlock(annotation)),
+			"annotation" => Ok(annotation),
 			
-			"character-variant" => Ok(WithBlock(character_variant)),
+			"character-variant" => Ok(character_variant),
 			
-			"styleset" => Ok(WithBlock(styleset)),
+			"styleset" => Ok(styleset),
 			
-			_ => Err(BasicParseError::AtRuleBodyInvalid.into()),
+			_ => Err(input.new_error(BasicParseErrorKind::AtRuleBodyInvalid)),
 		}
 	}
 	
-	fn parse_block<'t>(&mut self, prelude: Self::PreludeBlock, input: &mut Parser<'i, 't>) -> Result<Self::AtRule, ParseError<'i, CustomParseError<'i>>>
+	fn parse_block<'t>(&mut self, prelude: Self::Prelude, _: &ParserState, input: &mut Parser<'i, 't>) -> Result<Self::AtRule, ParseError<'i, Self::Error>>
 	{
 		use self::FontFeatureValuesBlockType::*;
 		
 		match prelude
 		{
-			swash => Self::parseBlock(self.context, input, &mut self.rule.swash),
-			stylistic => Self::parseBlock(self.context, input, &mut self.rule.stylistic),
-			ornaments => Self::parseBlock(self.context, input, &mut self.rule.ornaments),
-			annotation => Self::parseBlock(self.context, input, &mut self.rule.annotation),
-			character_variant => Self::parseBlock(self.context, input, &mut self.rule.character_variant),
-			styleset => Self::parseBlock(self.context, input, &mut self.rule.styleset),
+			swash => FontFeatureValuesDeclarationsParser::parseBlock(input, self.context, &mut self.rule.swash),
+			stylistic => FontFeatureValuesDeclarationsParser::parseBlock(input, self.context, &mut self.rule.stylistic),
+			ornaments => FontFeatureValuesDeclarationsParser::parseBlock(input, self.context, &mut self.rule.ornaments),
+			annotation => FontFeatureValuesDeclarationsParser::parseBlock(input, self.context, &mut self.rule.annotation),
+			character_variant => FontFeatureValuesDeclarationsParser::parseBlock(input, self.context, &mut self.rule.character_variant),
+			styleset => FontFeatureValuesDeclarationsParser::parseBlock(input, self.context, &mut self.rule.styleset),
 		}
-	}
-}
-
-impl<'a> FontFeatureValuesAtRuleParser<'a>
-{
-	#[inline(always)]
-	fn parseBlock<'i, 't, T: 'a + ToCss + Parse>(context: &ParserContext, input: &mut Parser<'i, 't>, declarations: &'a mut Vec<FontFeatureValuesDeclaration<T>>) -> Result<(), ParseError<'i, CustomParseError<'i>>>
-	{
-		FontFeatureValuesDeclarationsParser::parseBlock(input, context, declarations)
 	}
 }

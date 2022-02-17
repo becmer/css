@@ -412,7 +412,7 @@ impl ToCss for PseudoElement
 	}
 }
 
-impl ::selectors::parser::PseudoElement for PseudoElement
+impl crate::selectors::parser::PseudoElement for PseudoElement
 {
 	type Impl = OurSelectorImpl;
 	
@@ -459,7 +459,7 @@ impl PseudoElement
 	
 	//noinspection SpellCheckingInspection
 	#[inline(always)]
-	pub(crate) fn parse_without_arguments<'i>(applyVendorPrefixToPseudoElements: &HashMap<VendorPrefixablePseudoElementName, VendorPrefix>, name: CowRcStr<'i>) -> Result<Self, ParseError<'i, SelectorParseError<'i, CustomParseError<'i>>>>
+	pub(crate) fn parse_without_arguments<'i>(applyVendorPrefixToPseudoElements: &HashMap<VendorPrefixablePseudoElementName, VendorPrefix>, name: CowRcStr<'i>) -> Result<Self, SelectorParseError<'i, CustomParseError<'i>>>
 	{
 		use self::PseudoElement::*;
 		use self::VendorPrefix::*;
@@ -679,13 +679,13 @@ impl PseudoElement
 			"-webkit-search-decoration" => Ok(search_decoration(Some(webkit))),
 			
 			
-			_ => Err(ParseError::Custom(SelectorParseError::UnsupportedPseudoClassOrElement(name.clone()))),
+			_ => Err(SelectorParseError::UnsupportedPseudoClassOrElement(name.clone())),
 		}
 	}
 	
 	#[inline(always)]
-	pub(crate) fn parse_with_arguments<'i, 't>(_applyVendorPrefixToPseudoElements: &HashMap<VendorPrefixablePseudoElementName, VendorPrefix>, name: CowRcStr<'i>, _arguments: &mut Parser<'i, 't>, _ourSelectorParser: &OurSelectorParser) -> Result<Self, ParseError<'i, SelectorParseError<'i, CustomParseError<'i>>>>
+	pub(crate) fn parse_with_arguments<'i, 't>(_applyVendorPrefixToPseudoElements: &HashMap<VendorPrefixablePseudoElementName, VendorPrefix>, name: CowRcStr<'i>, input: &mut Parser<'i, 't>, _ourSelectorParser: &OurSelectorParser) -> Result<Self, ParseError<'i, SelectorParseError<'i, CustomParseError<'i>>>>
 	{
-		Err(ParseError::Custom(SelectorParseError::UnsupportedPseudoClassOrElement(name)))
+		Err(input.new_custom_error(SelectorParseError::UnsupportedPseudoClassOrElement(name)))
 	}
 }

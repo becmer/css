@@ -26,7 +26,7 @@ impl Parse for Ratio
 		let width = input.expect_integer()?;
 		if width <= 0
 		{
-			return Err(ParseError::Custom(CustomParseError::RatioNumeratorCanNotBeNegativeOrZero(width)))
+			return Err(input.new_custom_error(CustomParseError::RatioNumeratorCanNotBeNegativeOrZero(width)))
 		}
 		
 		input.expect_delim('/')?;
@@ -34,7 +34,7 @@ impl Parse for Ratio
 		let height = input.expect_integer()?;
 		if height <= 0
 		{
-			return Err(ParseError::Custom(CustomParseError::RatioDivisorCanNotBeNegativeOrZero(width)))
+			return Err(input.new_custom_error(CustomParseError::RatioDivisorCanNotBeNegativeOrZero(width)))
 		}
 		
 		Ok(Self::new(width as u32, height as u32))

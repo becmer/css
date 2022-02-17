@@ -37,7 +37,7 @@ impl ViewportZoom
 	{
 		use self::ViewportZoom::*;
 		
-		if input.try(|input| input.expect_ident_matching("auto")).is_ok()
+		if input.r#try(|input| input.expect_ident_matching("auto")).is_ok()
 		{
 			return Ok(auto);
 		}

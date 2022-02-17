@@ -33,7 +33,7 @@ impl FontFamily
 		use self::FamilyNameSyntax::*;
 		use self::GenericFontFamilyName::*;
 		
-		if let Ok(value) = input.try(|i| i.expect_string_cloned())
+		if let Ok(value) = input.r#try(|i| i.expect_string_cloned())
 		{
 			return Ok
 			(
@@ -87,7 +87,7 @@ impl FontFamily
 			serialize_identifier(&ident, &mut serialization).unwrap();
 		}
 		
-		while let Ok(ident) = input.try(|i| i.expect_ident_cloned())
+		while let Ok(ident) = input.r#try(|i| i.expect_ident_cloned())
 		{
 			value.push(' ');
 			value.push_str(&ident);

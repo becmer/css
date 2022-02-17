@@ -21,7 +21,10 @@ impl Parse for VectorValues
 				},
 
 				// It can't be anything other than number.
-				Ok(unexpectedToken) => return CustomParseError::unexpectedToken(unexpectedToken),
+				Ok(unexpectedToken) => {
+					let unexpectedToken = unexpectedToken.clone();
+					return Err(input.new_unexpected_token_error(unexpectedToken))
+				},
 
 				Err(_) => break,
 			}
@@ -29,7 +32,7 @@ impl Parse for VectorValues
 
 		if vec.len() == 0
 		{
-			return Err(BasicParseError::EndOfInput.into());
+			return Err(input.new_error(BasicParseErrorKind::EndOfInput));
 		}
 
 		Ok(VectorValues(vec))

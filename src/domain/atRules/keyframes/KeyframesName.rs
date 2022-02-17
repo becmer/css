@@ -75,9 +75,12 @@ impl KeyframesName
 	{
 		match input.next()
 		{
-			Ok(&Token::Ident(ref s)) => Ok(KeyframesName::Ident(CustomIdent::from_ident(s, &["none"])?)),
+			Ok(&Token::Ident(ref s)) => Ok(KeyframesName::Ident(CustomIdent::from_ident(s, &["none"]).map_err(|error| input.new_custom_error(error))?)),
 			Ok(&Token::QuotedString(ref s)) => Ok(KeyframesName::QuotedString(Atom::from(s.as_ref()))),
-			Ok(t) => Err(BasicParseError::UnexpectedToken(t.clone()).into()),
+			Ok(t) => {
+				let t = t.clone();
+				Err(input.new_unexpected_token_error(t))
+			},
 			Err(e) => Err(e.into()),
 		}
 	}

@@ -252,10 +252,7 @@ impl CounterStyleAtRule
 			let mut iterator = DeclarationListParser::new(input, parser);
 			while let Some(declaration) = iterator.next()
 			{
-				if declaration.is_err()
-				{
-					return Err(declaration.unwrap_err().error);
-				}
+				declaration.map_err(|(error, _)| error)?;
 			}
 		}
 		
@@ -264,27 +261,27 @@ impl CounterStyleAtRule
 		{
 			ref system @ Cyclic | ref system @ Fixed { .. } | ref system @ Symbolic | ref system @ Alphabetic | ref system @ Numeric if rule.symbols.is_none() =>
 			{
-				return Err(ParseError::Custom(CustomParseError::InvalidCounterStyleWithoutSymbols(system.clone())))
+				return Err(input.new_custom_error(CustomParseError::InvalidCounterStyleWithoutSymbols(system.clone())))
 			}
 			
 			ref system @ Alphabetic | ref system @ Numeric if rule.symbols().unwrap().0.len() < 2 =>
 			{
-				return Err(ParseError::Custom(CustomParseError::InvalidCounterStyleNotEnoughSymbols(system.clone())))
+				return Err(input.new_custom_error(CustomParseError::InvalidCounterStyleNotEnoughSymbols(system.clone())))
 			}
 			
 			Additive if rule.additive_symbols.is_none() =>
 			{
-				return Err(ParseError::Custom(CustomParseError::InvalidCounterStyleWithoutAdditiveSymbols))
+				return Err(input.new_custom_error(CustomParseError::InvalidCounterStyleWithoutAdditiveSymbols))
 			}
 			
 			Extends(_) if rule.symbols.is_some() =>
 			{
-				return Err(ParseError::Custom(CustomParseError::InvalidCounterStyleExtendsWithSymbols))
+				return Err(input.new_custom_error(CustomParseError::InvalidCounterStyleExtendsWithSymbols))
 			}
 			
 			Extends(_) if rule.additive_symbols.is_some() =>
 			{
-				return Err(ParseError::Custom(CustomParseError::InvalidCounterStyleExtendsWithAdditiveSymbols))
+				return Err(input.new_custom_error(CustomParseError::InvalidCounterStyleExtendsWithAdditiveSymbols))
 			}
 			
 			_ =>

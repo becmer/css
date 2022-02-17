@@ -6,10 +6,8 @@
 pub trait HasImportance: ToCss + Sized + Debug + Copy + Clone + Ord + PartialOrd + Eq + PartialEq + Hash
 {
 	/// Validate and convert importance, if permitted
-	#[inline(always)]
-	fn validateParsedImportance<'i>(importance: Importance) -> Result<Self, ParseError<'i, CustomParseError<'i>>>;
+	fn validateParsedImportance<'i>(importance: Importance) -> Result<Self, CustomParseError<'i>>;
 	
 	/// Return whether this is an important declaration.
-	#[inline(always)]
 	fn isImportant(&self) -> bool;
 }

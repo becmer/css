@@ -22,7 +22,7 @@ impl ToCss for FontWeight
 {
 	fn to_css<W: fmt::Write>(&self, dest: &mut W) -> fmt::Result
 	{
-		use self::FontWeight::*;;
+		use self::FontWeight::*;
 		
 		match *self
 		{
@@ -43,7 +43,7 @@ impl Parse for FontWeight
 {
 	fn parse<'i, 't>(_: &ParserContext, input: &mut Parser<'i, 't>) -> Result<FontWeight, ParseError<'i, CustomParseError<'i>>>
 	{
-		let result = input.try(|input|
+		let result = input.r#try(|input|
 		{
 			let ident = input.expect_ident().map_err(|_| ())?;
 			match_ignore_ascii_case!
@@ -55,7 +55,7 @@ impl Parse for FontWeight
             }
 		});
 		
-		result.or_else(|_| Self::from_int(input.expect_integer()?).map_err(|()| ParseError::Custom(CustomParseError::FontFaceAtRuleFontWeightWasNotAValidIdentifierOrInteger)))
+		result.or_else(|_| Self::from_int(input.expect_integer()?).map_err(|_| input.new_custom_error(CustomParseError::FontFaceAtRuleFontWeightWasNotAValidIdentifierOrInteger)))
 	}
 }
 

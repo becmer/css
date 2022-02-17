@@ -23,15 +23,7 @@ impl ViewportAtRule
 		let mut parser = DeclarationListParser::new(input, parser);
 		while let Some(result) = parser.next()
 		{
-			match result
-			{
-				Ok(viewportDescriptorDeclaration) =>
-				{
-					declarations.push(viewportDescriptorDeclaration);
-				}
-				
-				Err(preciseParseError) => return Err(preciseParseError.error),
-			}
+			declarations.push(result.map_err(|(error, _)| error)?);
 		}
 		Ok(Self { vendor_prefix, declarations })
 	}

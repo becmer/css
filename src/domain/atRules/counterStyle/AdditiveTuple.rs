@@ -32,11 +32,11 @@ impl Parse for AdditiveTuple
 {
 	fn parse<'i, 't>(context: &ParserContext, input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
 	{
-		let symbol = input.try(|input| Symbol::parse(context, input));
+		let symbol = input.r#try(|input| Symbol::parse(context, input));
 		let weight = input.expect_integer()?;
 		if weight < 0
 		{
-			return Err(ParseError::Custom(CustomParseError::CounterStyleAdditiveTupleWeightCanNotBeNegative(weight)))
+			return Err(input.new_custom_error(CustomParseError::CounterStyleAdditiveTupleWeightCanNotBeNegative(weight)))
 		}
 		let symbol = symbol.or_else(|_| Symbol::parse(context, input))?;
 		Ok

@@ -244,7 +244,9 @@ impl<Number: CssNumber> FontRelativeLength<Number>
 {
 	/// Convert this into a pixel value.
 	#[inline(always)]
-	fn to_px(&self, fontRelativeLengthConversion: &FontRelativeLengthConversion<Number>) -> Number
+	fn to_px<V>(&self, fontRelativeLengthConversion: &V) -> Number
+	where
+		V: FontRelativeLengthConversion<Number>,
 	{
 		match *self
 		{
@@ -257,7 +259,9 @@ impl<Number: CssNumber> FontRelativeLength<Number>
 	
 	/// Convert this into AppUnits.
 	#[inline]
-	pub fn to_app_units(&self, fontRelativeLengthConversion: &FontRelativeLengthConversion<Number>) -> Number
+	pub fn to_app_units<V>(&self, fontRelativeLengthConversion: &V) -> Number
+	where
+		V: FontRelativeLengthConversion<Number>,
 	{
 		self.to_px(fontRelativeLengthConversion) * Number::AppUnitsPerPX
 	}

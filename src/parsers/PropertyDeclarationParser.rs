@@ -12,9 +12,7 @@ pub(crate) struct PropertyDeclarationParser<'a, I: 'a + HasImportance>
 /// In theory, @rules may be present. In practice, none are currently defined (Sep 2017)
 impl<'a, 'i, I: HasImportance> AtRuleParser<'i> for PropertyDeclarationParser<'a, I>
 {
-	type PreludeNoBlock = ();
-	
-	type PreludeBlock = ();
+	type Prelude = ();
 	
 	type AtRule = PropertyDeclaration<I>;
 	
@@ -35,7 +33,7 @@ impl<'a, 'i, I: HasImportance> DeclarationParser<'i> for PropertyDeclarationPars
 		
 		let value = input.parse_until_before(Delimiter::Bang, |input|
 		{
-			if let Ok(cssWideKeyword) = input.try(|input| CssWideKeyword::parse(input))
+			if let Ok(cssWideKeyword) = input.r#try(|input| CssWideKeyword::parse(input))
 			{
 				Ok(UnparsedPropertyValue::CssWideKeyword(cssWideKeyword))
 			}
@@ -45,7 +43,7 @@ impl<'a, 'i, I: HasImportance> DeclarationParser<'i> for PropertyDeclarationPars
 			}
 		})?;
 		
-		let importance = I::validateParsedImportance(Importance::parse(input))?;
+		let importance = I::validateParsedImportance(Importance::parse(input)).map_err(|error| input.new_custom_error(error))?;
 		
 		input.expect_exhausted()?;
 		

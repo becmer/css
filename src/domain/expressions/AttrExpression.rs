@@ -105,7 +105,7 @@ impl AttrExpression
 			}
 			else
 			{
-				let type_or_unit = if let Some(type_or_unit) = input.try(|input| TypeOrUnit::parse(input)).ok()
+				let type_or_unit = if let Some(type_or_unit) = input.r#try(|input| TypeOrUnit::parse(input)).ok()
 				{
 					type_or_unit
 				}
@@ -114,7 +114,7 @@ impl AttrExpression
 					TypeOrUnit::default()
 				};
 				
-				let result = input.try(|input|
+				let result = input.r#try(|input|
 				{
 					input.skip_whitespace();
 					input.expect_comma()?;

@@ -12,7 +12,7 @@ impl Parse for Ranges
 {
 	fn parse<'i, 't>(_context: &ParserContext, input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
 	{
-		if input.try(|input| input.expect_ident_matching("auto")).is_ok()
+		if input.r#try(|input| input.expect_ident_matching("auto")).is_ok()
 		{
 			Ok(Self::empty())
 		}
@@ -26,7 +26,7 @@ impl Parse for Ranges
 				{
 					if start > end
 					{
-						return Err(ParseError::Custom(CustomParseError::CounterStyleRangesCanNotHaveStartGreaterThanEnd(start, end)))
+						return Err(input.new_custom_error(CustomParseError::CounterStyleRangesCanNotHaveStartGreaterThanEnd(start, end)))
 					}
 				}
 				Ok(opt_start .. opt_end)
@@ -81,7 +81,10 @@ impl Ranges
 			
 			Ok(&Ident(ref ident)) if ident.eq_ignore_ascii_case("infinite") => Ok(None),
 			
-			Ok(token) => Err(BasicParseError::UnexpectedToken(token.clone()).into()),
+			Ok(token) => {
+				let token = token.clone();
+				Err(input.new_unexpected_token_error(token))
+			},
 			
 			Err(error) => Err(error.into()),
 		}

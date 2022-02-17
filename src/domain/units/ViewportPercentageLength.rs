@@ -248,7 +248,9 @@ impl<Number: CssNumber> ViewportPercentageLength<Number>
 {
 	/// Convert this into a pixel value.
 	#[inline(always)]
-	fn to_px(&self, viewportPercentageLengthConversion: &ViewportPercentageLengthConversion<Number>) -> Number
+	fn to_px<V>(&self, viewportPercentageLengthConversion: &V) -> Number
+	where
+		V: ViewportPercentageLengthConversion<Number>,
 	{
 		match *self
 		{
@@ -261,7 +263,9 @@ impl<Number: CssNumber> ViewportPercentageLength<Number>
 	
 	/// Convert this into AppUnits.
 	#[inline]
-	pub fn to_app_units(&self, viewportPercentageLengthConversion: &ViewportPercentageLengthConversion<Number>) -> Number
+	pub fn to_app_units<V>(&self, viewportPercentageLengthConversion: &V) -> Number
+	where
+		V: ViewportPercentageLengthConversion<Number>,
 	{
 		self.to_px(viewportPercentageLengthConversion) * Number::AppUnitsPerPX
 	}

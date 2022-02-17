@@ -42,7 +42,7 @@ impl Error for UnitFromStrError
 	}
 	
 	#[inline(always)]
-	fn cause(&self) -> Option<&Error>
+	fn cause(&self) -> Option<&dyn Error>
 	{
 		use self::UnitFromStrError::*;
 		

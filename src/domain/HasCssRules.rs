@@ -4,18 +4,13 @@
 
 pub trait HasCssRules
 {
-	#[inline(always)]
 	fn css_rules(&self) -> &CssRules;
-	
-	#[inline(always)]
+
 	fn css_rules_mut(&mut self) -> &mut CssRules;
-	
-	#[inline(always)]
+
 	fn css_rules_slice(&self) -> &[CssRule];
-	
-	#[inline(always)]
+
 	fn css_rules_vec(&self) -> &Vec<CssRule>;
-	
-	#[inline(always)]
+
 	fn css_rules_vec_mut(&mut self) -> &mut Vec<CssRule>;
 }

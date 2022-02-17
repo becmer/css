@@ -38,7 +38,7 @@ impl Parse for Source
 	{
 		use self::Source::*;
 		
-		if input.try(|input| input.expect_function_matching("local")).is_ok()
+		if input.r#try(|input| input.expect_function_matching("local")).is_ok()
 		{
 			input.parse_nested_block(|input|	 FamilyName::parse(context, input)).map(Local)
 		}
@@ -47,7 +47,7 @@ impl Parse for Source
 			let url = SpecifiedUrl::parse(context, input)?;
 			
 			// Parsing optional format()
-			let format_hints = if input.try(|input| input.expect_function_matching("format")).is_ok()
+			let format_hints = if input.r#try(|input| input.expect_function_matching("format")).is_ok()
 			{
 				input.parse_nested_block(|input|
 				{

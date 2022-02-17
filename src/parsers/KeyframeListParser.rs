@@ -18,9 +18,7 @@ pub(crate) struct KeyframeListParser<'a>
 // Default methods reject all @ rules.
 impl<'a, 'i> AtRuleParser<'i> for KeyframeListParser<'a>
 {
-	type PreludeNoBlock = ();
-	
-	type PreludeBlock = ();
+	type Prelude = ();
 	
 	type AtRule = Keyframe;
 	
@@ -50,8 +48,8 @@ impl<'a, 'i> QualifiedRuleParser<'i> for KeyframeListParser<'a>
 			Err(error) => Err(error),
 		}
 	}
-	
-	fn parse_block<'t>(&mut self, prelude: Self::Prelude, input: &mut Parser<'i, 't>) -> Result<Self::QualifiedRule, ParseError<'i, CustomParseError<'i>>>
+
+	fn parse_block<'t>(&mut self, prelude: Self::Prelude, _: &ParserState, input: &mut Parser<'i, 't>) -> Result<Self::QualifiedRule, ParseError<'i, Self::Error>>
 	{
 		let context = ParserContext::new_with_rule_type(self.context, CssRuleType::Keyframe);
 		
@@ -84,7 +82,7 @@ impl<'a> KeyframeListParser<'a>
 			{
 				Ok(keyframe) => keyframes.push(keyframe),
 				
-				Err(preciseParseError) => return Err(preciseParseError.error),
+				Err((preciseParseError, _)) => return Err(preciseParseError),
 			}
 		}
 		

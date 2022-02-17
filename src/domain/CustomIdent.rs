@@ -9,12 +9,12 @@ pub struct CustomIdent(pub Atom);
 impl CustomIdent
 {
 	/// Parse an already-tokenizer identifier
-	pub(crate) fn from_ident<'i>(ident: &CowRcStr<'i>, excluding: &[&str]) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
+	pub(crate) fn from_ident<'i>(ident: &CowRcStr<'i>, excluding: &[&str]) -> Result<Self, CustomParseError<'i>>
 	{
 		match_ignore_ascii_case!
 		{
 			ident,
-            "initial" | "inherit" | "unset" | "default" => return Err(ParseError::Custom(CustomParseError::UnexpectedCustomIdent(ident.clone()))),
+            "initial" | "inherit" | "unset" | "default" => return Err(CustomParseError::UnexpectedCustomIdent(ident.clone())),
             _ =>
             {
             }
@@ -22,7 +22,7 @@ impl CustomIdent
 		
 		if excluding.iter().any(|s| ident.eq_ignore_ascii_case(s))
 		{
-			Err(ParseError::Custom(CustomParseError::CustomIdentWasExcluded(ident.clone())))
+			Err(CustomParseError::CustomIdentWasExcluded(ident.clone()))
 		}
 		else
 		{

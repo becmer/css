@@ -29,7 +29,7 @@ impl Parse for Negative
 			Negative
 			(
 			Symbol::parse(context, input)?,
-			input.try(|input| Symbol::parse(context, input)).ok(),
+			input.r#try(|input| Symbol::parse(context, input)).ok(),
 			)
 		)
 	}

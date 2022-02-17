@@ -94,11 +94,11 @@ impl MediaQuery
 		
 		use self::Qualifier::*;
 		
-		let qualifier = if input.try(|input| input.expect_ident_matching("only")).is_ok()
+		let qualifier = if input.r#try(|input| input.expect_ident_matching("only")).is_ok()
 		{
 			Some(Only)
 		}
-		else if input.try(|input| input.expect_ident_matching("not")).is_ok()
+		else if input.r#try(|input| input.expect_ident_matching("not")).is_ok()
 		{
 			Some(Not)
 		}
@@ -107,11 +107,11 @@ impl MediaQuery
 			None
 		};
 		
-		let isThereAValidMediaType = input.try(|input|
+		let isThereAValidMediaType = input.r#try(|input|
 		{
 			if let Ok(ident) = input.expect_ident()
 			{
-				match MediaQueryType::parse(ident).map_err(|error| ParseError::Custom(error))
+				match MediaQueryType::parse(ident).map_err(|error| input.new_custom_error::<_, CustomParseError>(error))
 				{
 					Ok(mediaType) => Ok(Left(mediaType)),
 					Err(error) => Ok(Right(error)),
@@ -134,7 +134,7 @@ impl MediaQuery
 				// Media type is only optional if qualifier is not specified.
 				if qualifier.is_some()
 				{
-					return Err(ParseError::Custom(CustomParseError::MediaTypeIsOnlyOptionalIfQualifiedIsNotSpecified))
+					return Err(input.new_custom_error(CustomParseError::MediaTypeIsOnlyOptionalIfQualifiedIsNotSpecified))
 				}
 				
 				// Without a media type, require at least one expression.
@@ -147,7 +147,7 @@ impl MediaQuery
 		// Parse any subsequent expressions
 		loop
 		{
-			if input.try(|input| input.expect_ident_matching("and")).is_err()
+			if input.r#try(|input| input.expect_ident_matching("and")).is_err()
 			{
 				return Ok
 				(

@@ -5,6 +5,12 @@
 /// A rule prelude for at-rule with block.
 pub enum AtRuleBlockPrelude
 {
+	/// An @import rule prelude.
+	Import(ImportAtRule),
+
+	/// A @namespace rule prelude.
+	Namespace(NamespaceAtRule),
+
 	/// A @counter-style rule prelude, with its counter style name.
 	CounterStyle(CounterStyleIdent),
 	

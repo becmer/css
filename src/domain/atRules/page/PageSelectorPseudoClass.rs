@@ -38,13 +38,13 @@ impl PageSelectorPseudoClass
 	{
 		use self::PageSelectorPseudoClass::*;
 		
-		let result: Result<Either<Self, ParseError<'i, CustomParseError<'i>>>, ()> = input.try(|input|
+		let result: Result<Either<Self, ParseError<'i, CustomParseError<'i>>>, ()> = input.r#try(|input|
 		{
 			input.expect_colon().map_err(|_| ())?;
 			
 			match input.expect_ident()
 			{
-				Err(basicParseError) => Ok(Right(ParseError::Basic(basicParseError))),
+				Err(basicParseError) => Ok(Right(basicParseError.into())),
 				
 				Ok(pageSelectorName) => match_ignore_ascii_case!
 				{
@@ -62,7 +62,10 @@ impl PageSelectorPseudoClass
 				
 					"verso" => Ok(Left(verso)),
 					
-					_ => Ok(Right(ParseError::Custom(CustomParseError::InvalidPageSelectorPseudoClass(pageSelectorName.clone()))))
+					_ => {
+						let pageSelectorName = pageSelectorName.clone();
+						Ok(Right(input.new_custom_error(CustomParseError::InvalidPageSelectorPseudoClass(pageSelectorName))))
+					},
 				},
 			}
 		});

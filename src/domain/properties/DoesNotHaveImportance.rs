@@ -18,11 +18,11 @@ impl ToCss for DoesNotHaveImportance
 impl HasImportance for DoesNotHaveImportance
 {
 	#[inline(always)]
-	fn validateParsedImportance<'i>(importance: Importance) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
+	fn validateParsedImportance<'i>(importance: Importance) -> Result<Self, CustomParseError<'i>>
 	{
 		if importance.isImportant()
 		{
-			Err(ParseError::Custom(CustomParseError::ImportantIsNotAllowedInKeyframePropertyDeclarationValues))
+			Err(CustomParseError::ImportantIsNotAllowedInKeyframePropertyDeclarationValues)
 		}
 		else
 		{

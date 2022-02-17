@@ -97,8 +97,8 @@ pub enum CustomParseError<'i>
 	CustomIdentWasExcluded(CowRcStr<'i>),
 	
 	// numbers & units
-	CouldNotParseCssSignedNumber(::domain::numbers::CssNumberConversionError, f32),
-	CouldNotParseCssUnsignedNumber(::domain::numbers::CssNumberConversionError, f32),
+	CouldNotParseCssSignedNumber(crate::domain::numbers::CssNumberConversionError, f32),
+	CouldNotParseCssUnsignedNumber(crate::domain::numbers::CssNumberConversionError, f32),
 	CouldNotParseDimensionLessNumber(f32),
 	CouldNotParseDimension(f32, CowRcStr<'i>),
 	UnsignedIntegersCanNotBeNegative(i32),
@@ -109,17 +109,16 @@ pub enum CustomParseError<'i>
 	CssVariablesInVarExpressionsMustStartWithTwoDashes(CowRcStr<'i>),
 }
 
-impl<'i> CustomParseError<'i>
-{
+impl<'i> From<SelectorParseError<'i, CustomParseError<'i>>> for CustomParseError<'i> {
 	#[inline(always)]
-	fn unexpectedToken<T>(unexpectedToken: &Token<'i>) -> Result<T, ParseError<'i, CustomParseError<'i>>>
-	{
-		Err(ParseError::Basic(BasicParseError::UnexpectedToken(unexpectedToken.clone())))
+	fn from(error: SelectorParseError<'i, CustomParseError<'i>>) -> Self {
+		Self::SpecificSelectorParseError(Box::new(error))
 	}
-	
+}
+
+impl<'i> Into<SelectorParseError<'i, CustomParseError<'i>>> for CustomParseError<'i> {
 	#[inline(always)]
-	fn dimensionless<T>(value: f32) -> Result<T, ParseError<'i, CustomParseError<'i>>>
-	{
-		Err(ParseError::Custom(CustomParseError::CouldNotParseDimensionLessNumber(value)))
+	fn into(self) -> SelectorParseError<'i, CustomParseError<'i>> {
+		SelectorParseError::Custom(self)
 	}
 }

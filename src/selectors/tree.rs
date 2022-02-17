@@ -5,10 +5,10 @@
 //! Traits that nodes must implement. Breaks the otherwise-cyclic dependency
 //! between layout and style.
 
-use ::selectors::attr::{AttrSelectorOperation, NamespaceConstraint, CaseSensitivity};
-use ::selectors::matching::{ElementSelectorFlags, LocalMatchingContext, MatchingContext, RelevantLinkStatus};
-use ::selectors::parser::SelectorImpl;
-use servo_arc::NonZeroPtrMut;
+use crate::selectors::attr::{AttrSelectorOperation, NamespaceConstraint, CaseSensitivity};
+use crate::selectors::matching::{ElementSelectorFlags, LocalMatchingContext, MatchingContext, RelevantLinkStatus};
+use crate::selectors::parser::SelectorImpl;
+use crate::servo_arc::NonZeroPtrMut;
 use std::fmt::Debug;
 
 /// Opaque representation of an Element, for identity comparisons. We use

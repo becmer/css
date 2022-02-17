@@ -2,15 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use selectors::attr::{ParsedAttrSelectorOperation, AttrSelectorOperation, NamespaceConstraint};
-use selectors::bloom::{BLOOM_HASH_MASK, BloomFilter};
-use selectors::nth_index_cache::NthIndexCacheInner;
-use selectors::parser::{AncestorHashes, Combinator, Component, LocalName};
-use selectors::parser::{Selector, SelectorImpl, SelectorIter, SelectorList};
+use crate::selectors::attr::{ParsedAttrSelectorOperation, AttrSelectorOperation, NamespaceConstraint};
+use crate::selectors::bloom::{BLOOM_HASH_MASK, BloomFilter};
+use crate::selectors::nth_index_cache::NthIndexCacheInner;
+use crate::selectors::parser::{AncestorHashes, Combinator, Component, LocalName};
+use crate::selectors::parser::{Selector, SelectorImpl, SelectorIter, SelectorList};
 use std::borrow::Borrow;
-use selectors::tree::Element;
+use crate::selectors::tree::Element;
 
-pub use selectors::context::*;
+pub use crate::selectors::context::*;
 
 // The bloom filter for descendant CSS selectors will have a <1% false
 // positive rate until it has this many selectors in it, then it will
@@ -641,7 +641,7 @@ fn matches_simple_selector<E, F>(
             element.get_namespace() == url.borrow()
         }
         Component::ExplicitNoNamespace => {
-            let ns = ::selectors::parser::namespace_empty_string::<E::Impl>();
+            let ns = crate::selectors::parser::namespace_empty_string::<E::Impl>();
             element.get_namespace() == ns.borrow()
         }
         Component::ID(ref id) => {
@@ -653,7 +653,7 @@ fn matches_simple_selector<E, F>(
         Component::AttributeInNoNamespaceExists { ref local_name, ref local_name_lower } => {
             let is_html = element.is_html_element_in_html_document();
             element.attr_matches(
-                &NamespaceConstraint::Specific(&::selectors::parser::namespace_empty_string::<E::Impl>()),
+                &NamespaceConstraint::Specific(&crate::selectors::parser::namespace_empty_string::<E::Impl>()),
                 select_name(is_html, local_name, local_name_lower),
                 &AttrSelectorOperation::Exists
             )
@@ -671,7 +671,7 @@ fn matches_simple_selector<E, F>(
             }
             let is_html = element.is_html_element_in_html_document();
             element.attr_matches(
-                &NamespaceConstraint::Specific(&::selectors::parser::namespace_empty_string::<E::Impl>()),
+                &NamespaceConstraint::Specific(&crate::selectors::parser::namespace_empty_string::<E::Impl>()),
                 select_name(is_html, local_name, local_name_lower),
                 &AttrSelectorOperation::WithValue {
                     operator: operator,

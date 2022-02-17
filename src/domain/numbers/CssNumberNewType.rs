@@ -4,10 +4,8 @@
 
 pub trait CssNumberNewType<Number: CssNumber>: Sized
 {
-	#[inline(always)]
 	fn to_f32(&self) -> f32;
-	
-	#[inline(always)]
+
 	fn as_CssNumber(&self) -> &Number;
 	
 	#[inline(always)]

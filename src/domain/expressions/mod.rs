@@ -9,7 +9,6 @@ use self::domain::expressions::CalculablePropertyValue::*;
 use ::either::Either;
 use ::either::Either::*;
 use ::std::rc::Rc;
-use ::std::ascii::AsciiExt;
 
 
 include!("AttrExpression.rs");

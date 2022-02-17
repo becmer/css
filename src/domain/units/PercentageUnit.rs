@@ -168,14 +168,17 @@ impl<NumberX: CssNumber> Unit for PercentageUnit<NumberX>
 			}
 			else
 			{
-				return CustomParseError::dimensionless(value)
+				return Err(input.new_custom_error(CustomParseError::CouldNotParseDimensionLessNumber(value)))
 			},
 			
-			Token::Percentage { unit_value, .. } => return Self::parse_percentage_outside_calc_function(unit_value),
+			Token::Percentage { unit_value, .. } => return Self::parse_percentage_outside_calc_function(unit_value).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Function(ref name) => FunctionParser::parser(name)?,
+			Token::Function(ref name) => FunctionParser::parser(name).map_err(|error| input.new_custom_error(error))?,
 			
-			ref unexpectedToken @ _ => return CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken @ _ => {
+				let unexpectedToken = unexpectedToken.clone();
+				return Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		};
 		functionParser.parse_one_outside_calc_function(context, input)
 	}
@@ -187,15 +190,18 @@ impl<NumberX: CssNumber> Unit for PercentageUnit<NumberX>
 		
 		let functionParser = match *input.next()?
 		{
-			Token::Number { value, .. } => return Self::number_inside_calc_function(value),
+			Token::Number { value, .. } => return Self::number_inside_calc_function(value).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Left(Constant(value))),
+			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Left(Constant(value))).map_err(|error| input.new_custom_error(error)),
 			
 			Token::ParenthesisBlock => FunctionParser::parentheses,
 			
-			Token::Function(ref name) => FunctionParser::parser(name)?,
+			Token::Function(ref name) => FunctionParser::parser(name).map_err(|error| input.new_custom_error(error))?,
 			
-			ref unexpectedToken @ _ => return CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken @ _ => {
+				let unexpectedToken = unexpectedToken.clone();
+				return Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		};
 		functionParser.parse_one_inside_calc_function(context, input)
 	}
@@ -219,12 +225,15 @@ impl<NumberX: CssNumber> Unit for PercentageUnit<NumberX>
 				}
 				else
 				{
-					CustomParseError::dimensionless(value)
+					Err(input.new_custom_error(CustomParseError::CouldNotParseDimensionLessNumber(value)))
 				},
 				
-				Token::Percentage { unit_value, .. } => PercentageUnit::parse_percentage(unit_value),
+				Token::Percentage { unit_value, .. } => PercentageUnit::parse_percentage(unit_value).map_err(|error| input.new_custom_error(error)),
 				
-				ref unexpectedToken @ _ => CustomParseError::unexpectedToken(unexpectedToken),
+				ref unexpectedToken @ _ => {
+					let unexpectedToken = unexpectedToken.clone();
+					Err(input.new_unexpected_token_error(unexpectedToken))
+				},
 			};
 			
 			input.skip_whitespace();
@@ -259,7 +268,7 @@ impl<Number: CssNumber> PercentageUnit<Number>
 	}
 	
 	#[inline(always)]
-	pub(crate) fn parse_percentage_outside_calc_function<'i>(unit_value: f32) -> Result<CalculablePropertyValue<Self>, ParseError<'i, CustomParseError<'i>>>
+	pub(crate) fn parse_percentage_outside_calc_function<'i>(unit_value: f32) -> Result<CalculablePropertyValue<Self>, CustomParseError<'i>>
 	{
 		use domain::expressions::CalculablePropertyValue::Constant;
 		
@@ -267,9 +276,9 @@ impl<Number: CssNumber> PercentageUnit<Number>
 	}
 	
 	#[inline(always)]
-	pub(crate) fn parse_percentage<'i>(unit_value: f32) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
+	pub(crate) fn parse_percentage<'i>(unit_value: f32) -> Result<Self, CustomParseError<'i>>
 	{
-		let percentage = Number::new(unit_value).map_err(|cssNumberConversionError| ParseError::Custom(CouldNotParseCssUnsignedNumber(cssNumberConversionError, unit_value)))?;
+		let percentage = Number::new(unit_value).map_err(|cssNumberConversionError| CouldNotParseCssUnsignedNumber(cssNumberConversionError, unit_value))?;
 		return Ok(PercentageUnit(percentage))
 	}
 }

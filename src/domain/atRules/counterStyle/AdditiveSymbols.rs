@@ -30,7 +30,7 @@ impl Parse for AdditiveSymbols
 		// FIXME maybe? https://github.com/w3c/csswg-drafts/issues/1220
 		if tuples.windows(2).any(|window| window[0].weight <= window[1].weight)
 		{
-			return Err(ParseError::Custom(CustomParseError::CounterStyleAdditiveSymbolsCanNotHaveASecondWeightEqualToOrGreaterThanTheFirst))
+			return Err(input.new_custom_error(CustomParseError::CounterStyleAdditiveSymbolsCanNotHaveASecondWeightEqualToOrGreaterThanTheFirst))
 		}
 		Ok(AdditiveSymbols(tuples))
 	}

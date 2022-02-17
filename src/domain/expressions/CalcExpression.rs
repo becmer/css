@@ -186,7 +186,10 @@ impl<U: Unit> CalcExpression<U>
 				
 				Delim('-') => false,
 				
-				ref unexpectedToken => return CustomParseError::unexpectedToken(unexpectedToken),
+				ref unexpectedToken => {
+					let unexpectedToken = unexpectedToken.clone();
+					return Err(input.new_unexpected_token_error(unexpectedToken))
+				},
 			};
 			
 			currentSum = if isAddition

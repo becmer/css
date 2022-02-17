@@ -138,7 +138,7 @@ impl CounterStyleIdent
 	pub(crate) fn parse<'i, 't>(input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
 	{
 		let ident = input.expect_ident()?;
-		Self::from_ident(ident).map_err(|_| ParseError::Custom(CustomParseError::NoneIsNotAllowedInACounterStyleIdent))
+		Self::from_ident(ident).map_err(|_| input.new_custom_error(CustomParseError::NoneIsNotAllowedInACounterStyleIdent))
 	}
 	
 	pub(crate) fn parseForCounterStyleAtRule<'i, 't>(input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
@@ -146,7 +146,7 @@ impl CounterStyleIdent
 		let counterStyleIdent = Self::parse(input)?;
 		if counterStyleIdent.is_not_allowed_in_counter_style_at_rule()
 		{
-			Err(ParseError::Custom(CustomParseError::DecimalOrDiscIsNotAllowedInACounterStyleIdentInACounterStyleAtRule))
+			Err(input.new_custom_error(CustomParseError::DecimalOrDiscIsNotAllowedInACounterStyleIdentInACounterStyleAtRule))
 		}
 		else
 		{
@@ -171,7 +171,7 @@ impl CounterStyleIdent
 		
 		let lowerCaseIdent: String = anyCaseIdent.to_ascii_lowercase();
 		
-		static KnownCounterStyleNames: phf::Map<&'static str, CounterStyleIdent> = phf_map!
+		static KnownCounterStyleNames: phf::Map<&'static str, CounterStyleIdent> = phf::phf_map!
 		{
 			"decimal" => decimal,
 			"decimal-leading-zero" => decimal_leading_zero,

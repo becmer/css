@@ -73,10 +73,7 @@ impl FontFeatureValuesAtRule
 			});
 			while let Some(possiblePreciseParseError) = iterator.next()
 			{
-				if possiblePreciseParseError.is_err()
-				{
-					return Err(possiblePreciseParseError.unwrap_err().error);
-				}
+				possiblePreciseParseError.map_err(|(error, _)| error)?;
 			}
 		}
 		

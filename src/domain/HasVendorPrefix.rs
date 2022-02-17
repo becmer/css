@@ -4,6 +4,5 @@
 
 pub trait HasVendorPrefix
 {
-	#[inline(always)]
 	fn isNotVendorPrefixed(&self) -> bool;
 }

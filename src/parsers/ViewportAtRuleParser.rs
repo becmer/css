@@ -9,9 +9,7 @@ pub(crate) struct ViewportAtRuleParser<'a>
 
 impl<'a, 'i> AtRuleParser<'i> for ViewportAtRuleParser<'a>
 {
-	type PreludeNoBlock = ();
-	
-	type PreludeBlock = ();
+	type Prelude = ();
 	
 	type AtRule = ViewportDescriptorDeclaration;
 	
@@ -38,7 +36,7 @@ impl<'a, 'i> DeclarationParser<'i> for ViewportAtRuleParser<'a>
 		fn parse_shorthand_property<'a, 'i, 't, Constructor: FnOnce(ViewportLength, Option<ViewportLength>) -> ViewportDescriptor>(input: &mut Parser<'i, 't>, this: &ViewportAtRuleParser<'a>, constructor: Constructor) -> Result<ViewportDescriptorDeclaration, ParseError<'i, CustomParseError<'i>>>
 		{
 			let minimum = this.parseViewportLength(input)?;
-			let maximum = match input.try(|input| this.parseViewportLength(input))
+			let maximum = match input.r#try(|input| this.parseViewportLength(input))
 			{
 				Err(_) => None,
 				Ok(maximum) => Some(maximum),
@@ -72,7 +70,7 @@ impl<'a, 'i> DeclarationParser<'i> for ViewportAtRuleParser<'a>
             
             "orientation" => parse_property(input, Orientation, ViewportOrientation::parse),
             
-            _ => Err(ParseError::Custom(CustomParseError::UnexpectedViewportProperty(name.clone()))),
+            _ => Err(input.new_custom_error(CustomParseError::UnexpectedViewportProperty(name.clone()))),
         }
 	}
 }

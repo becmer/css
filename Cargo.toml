@@ -16,6 +16,7 @@ include = ["README.md", "LICENSE", "COPYRIGHT", "src/**/*.rs", "build.rs", "Carg
 readme = "README.md"
 publish = true
 version = "0.0.22"
+edition = "2021"
 
 [profile.release]
 opt-level = 3
@@ -30,8 +31,7 @@ bitflags = "^1.0"
 cssparser = "0.29"
 either = "1.2.0"
 ordermap = "0.2.13"
-phf = "0.10"
-phf_macros = "0.10"
+phf = { version = "0.10", features = ["macros"] }
 precomputed-hash = "^0.1"
 quick-error = "1.2.1"
 smallvec = "0.4"

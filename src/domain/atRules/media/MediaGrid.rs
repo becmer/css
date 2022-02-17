@@ -32,7 +32,7 @@ impl Parse for MediaGrid
 		{
 			0 => false,
 			1 => true,
-			invalid @ _ => return Err(ParseError::Custom(CustomParseError::MediaGridMustBeEitherZeroOrOne(invalid))),
+			invalid @ _ => return Err(input.new_custom_error(CustomParseError::MediaGridMustBeEitherZeroOrOne(invalid))),
 		};
 		
 		Ok

@@ -231,13 +231,16 @@ impl<NumberX: CssNumber> Unit for NumberOrPercentageUnit<NumberX>
 		
 		let functionParser = match *input.next()?
 		{
-			Token::Number { value, int_value, .. } => return Self::Number::parseNumber(value, int_value).map(|value| Constant(IsNumber(value))),
+			Token::Number { value, int_value, .. } => return Self::Number::parseNumber(value, int_value).map(|value| Constant(IsNumber(value))).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Constant(IsPercentage(value))),
+			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Constant(IsPercentage(value))).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Function(ref name) => FunctionParser::parser(name)?,
+			Token::Function(ref name) => FunctionParser::parser(name).map_err(|error| input.new_custom_error(error))?,
 			
-			ref unexpectedToken @ _ => return CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken @ _ => {
+				let unexpectedToken = unexpectedToken.clone();
+				return Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		};
 		functionParser.parse_one_outside_calc_function(context, input)
 	}
@@ -250,15 +253,18 @@ impl<NumberX: CssNumber> Unit for NumberOrPercentageUnit<NumberX>
 		
 		let functionParser = match *input.next()?
 		{
-			Token::Number { value, int_value, .. } => return Self::Number::parseNumber(value, int_value).map(|value| Left(Constant(IsNumber(value)))),
+			Token::Number { value, int_value, .. } => return Self::Number::parseNumber(value, int_value).map(|value| Left(Constant(IsNumber(value)))).map_err(|error| input.new_custom_error(error)),
 			
-			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Left(Constant(IsPercentage(value)))),
+			Token::Percentage { unit_value, .. } => return PercentageUnit::parse_percentage(unit_value).map(|value| Left(Constant(IsPercentage(value)))).map_err(|error| input.new_custom_error(error)),
 			
 			Token::ParenthesisBlock => FunctionParser::parentheses,
 			
-			Token::Function(ref name) => FunctionParser::parser(name)?,
+			Token::Function(ref name) => FunctionParser::parser(name).map_err(|error| input.new_custom_error(error))?,
 			
-			ref unexpectedToken @ _ => return CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken @ _ => {
+				let unexpectedToken = unexpectedToken.clone();
+				return Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		};
 		functionParser.parse_one_inside_calc_function(context, input)
 	}
@@ -284,11 +290,14 @@ impl<NumberX: CssNumber> Unit for NumberOrPercentageUnit<NumberX>
 		{
 			let value = match *input.next()?
 			{
-				Token::Number { value, int_value, .. } => Number::parseNumber(value, int_value).map(IsNumber),
+				Token::Number { value, int_value, .. } => Number::parseNumber(value, int_value).map(IsNumber).map_err(|error| input.new_custom_error(error)),
 				
-				Token::Percentage { unit_value, .. } => PercentageUnit::parse_percentage(unit_value).map(|value| IsPercentage(value)),
+				Token::Percentage { unit_value, .. } => PercentageUnit::parse_percentage(unit_value).map(|value| IsPercentage(value)).map_err(|error| input.new_custom_error(error)),
 				
-				ref unexpectedToken @ _ => CustomParseError::unexpectedToken(unexpectedToken),
+				ref unexpectedToken @ _ => {
+					let unexpectedToken = unexpectedToken.clone();
+					Err(input.new_unexpected_token_error(unexpectedToken))
+				},
 			};
 			
 			input.skip_whitespace();

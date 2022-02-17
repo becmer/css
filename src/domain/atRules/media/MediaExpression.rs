@@ -187,9 +187,9 @@ impl MediaExpression
 						
 						"-webkit-transform-3d" => Transform3D(MediaTransform3D::parse(context, input)?),
 						
-						"min-device-width" | "max-device-width" | "device-width" | "min-device-height" | "max-device-height" | "device-height" | "min-device-aspect-ratio" | "max-device-aspect-ratio" | "device-aspect-ratio" => return Err(ParseError::Custom(CustomParseError::DeprecatedMediaQueryExpression(name.clone()))),
+						"min-device-width" | "max-device-width" | "device-width" | "min-device-height" | "max-device-height" | "device-height" | "min-device-aspect-ratio" | "max-device-aspect-ratio" | "device-aspect-ratio" => return Err(input.new_custom_error(CustomParseError::DeprecatedMediaQueryExpression(name.clone()))),
 						
-						_ => return Err(ParseError::Custom(CustomParseError::UnsupportedMediaQueryExpression(name.clone())))
+						_ => return Err(input.new_custom_error(CustomParseError::UnsupportedMediaQueryExpression(name.clone())))
 					}
 				)
 			)

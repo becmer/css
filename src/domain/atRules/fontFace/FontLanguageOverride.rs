@@ -13,7 +13,7 @@ impl ToCss for FontLanguageOverride
 {
 	fn to_css<W: fmt::Write>(&self, dest: &mut W) -> fmt::Result
 	{
-		use self::FontLanguageOverride::*;;
+		use self::FontLanguageOverride::*;
 		
 		match *self
 		{
@@ -28,9 +28,9 @@ impl FontLanguageOverride
 	/// Parse a font-family value
 	pub(crate) fn parse<'i, 't>(input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
 	{
-		use self::FontLanguageOverride::*;;
+		use self::FontLanguageOverride::*;
 		
-		if let Ok(value) = input.try::<>(|input|
+		if let Ok(value) = input.r#try(|input|
 		{
 			match input.expect_string()
 			{
@@ -56,7 +56,7 @@ impl FontLanguageOverride
 			
 			"normal" => Ok(normal),
 			
-			_ => Err(ParseError::Custom(CustomParseError::InvalidFontLanguageOverrideIdentifier(identifier.clone()))),
+			_ => Err(input.new_custom_error(CustomParseError::InvalidFontLanguageOverrideIdentifier(identifier.clone()))),
 		}
 	}
 }

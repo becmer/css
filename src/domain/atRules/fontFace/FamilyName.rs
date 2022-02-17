@@ -35,7 +35,7 @@ impl Parse for FamilyName
 		match FontFamily::parse(input)
 		{
 			Ok(FamilyName(name)) => Ok(name),
-			Ok(Generic(_)) => Err(ParseError::Custom(CustomParseError::FontFaceAtRuleFontFamilyCanNotBeGeneric)),
+			Ok(Generic(_)) => Err(input.new_custom_error(CustomParseError::FontFaceAtRuleFontFamilyCanNotBeGeneric)),
 			Err(error) => Err(error)
 		}
 	}

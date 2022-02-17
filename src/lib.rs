@@ -4,8 +4,7 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
-#![feature(plugin, core)]
-#![plugin(phf_macros)]
+#![feature(proc_macro_hygiene)]
 
 //! # css
 //!
@@ -84,8 +83,8 @@ use self::domain::*;
 use self::parsers::*;
 use self::serializers::*;
 use ::cssparser::*;
-use ::quick_error::ResultExt;
-use ::selectors::parser::SelectorParseError;
+use crate::quick_error::ResultExt;
+use crate::selectors::parser::SelectorParseError;
 use ::std::fmt;
 use ::std::fs::File;
 use ::std::io::Read;

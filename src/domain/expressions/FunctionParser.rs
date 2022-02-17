@@ -14,7 +14,7 @@ pub(crate) enum FunctionParser
 impl FunctionParser
 {
 	#[inline(always)]
-	pub(crate) fn parser<'i>(name: &CowRcStr<'i>) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
+	pub(crate) fn parser<'i>(name: &CowRcStr<'i>) -> Result<Self, CustomParseError<'i>>
 	{
 		match_ignore_ascii_case!
 		{
@@ -26,7 +26,7 @@ impl FunctionParser
 			
 			"var" => Ok(var),
 			
-			_ => Err(ParseError::Custom(CustomParseError::UnknownFunctionInValueExpression(name.to_owned())))
+			_ => Err(CustomParseError::UnknownFunctionInValueExpression(name.to_owned()))
 		}
 	}
 	

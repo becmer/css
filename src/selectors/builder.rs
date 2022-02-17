@@ -17,9 +17,9 @@
 //! is non-trivial. This module encapsulates those details and presents an
 //! easy-to-use API for the parser.
 
-use ::selectors::parser::{Combinator, Component, SelectorImpl};
-use servo_arc::{Arc, HeaderWithLength, ThinArc};
-use ::selectors::sink::Push;
+use crate::selectors::parser::{Combinator, Component, SelectorImpl};
+use crate::servo_arc::{Arc, HeaderWithLength, ThinArc};
+use crate::selectors::sink::Push;
 use smallvec::{self, SmallVec};
 use std::cmp;
 use std::iter;

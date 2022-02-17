@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use ::cssparser::ToCss;
-use ::selectors::parser::SelectorImpl;
-use std::ascii::AsciiExt;
+use crate::selectors::parser::SelectorImpl;
 use std::fmt;
 
 #[derive(Clone, Eq, PartialEq)]

@@ -37,7 +37,7 @@ impl Error for CssNumberConversionError
 	}
 	
 	#[inline(always)]
-	fn cause(&self) -> Option<&Error>
+	fn cause(&self) -> Option<&dyn Error>
 	{
 		None
 	}

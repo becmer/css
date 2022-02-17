@@ -5,6 +5,5 @@
 pub trait AttributeConversion<U>
 {
 	/// Returns the (value of the attribute, property default if known)
-	#[inline(always)]
 	fn attributeValue(&self, attribute_lower_case_name: &str) -> (Option<&str>, U);
 }

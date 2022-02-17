@@ -34,9 +34,12 @@ impl MediaResolution
 		
 		let value = match *input.next()?
 		{
-			Token::Number { value, .. } => CssSignedNumber::new(value).map_err(|cssNumberConversionError| ParseError::Custom(CustomParseError::CouldNotParseCssSignedNumber(cssNumberConversionError, value))),
+			Token::Number { value, .. } => CssSignedNumber::new(value).map_err(|cssNumberConversionError| input.new_custom_error(CustomParseError::CouldNotParseCssSignedNumber(cssNumberConversionError, value))),
 			
-			ref unexpectedToken @ _ => CustomParseError::unexpectedToken(unexpectedToken),
+			ref unexpectedToken @ _ => {
+				let unexpectedToken = unexpectedToken.clone();
+				Err(input.new_unexpected_token_error(unexpectedToken))
+			},
 		}?;
 		
 		Ok(finite(CalculablePropertyValue::Constant(ResolutionUnit::dppx(value))))
@@ -46,7 +49,7 @@ impl MediaResolution
 	{
 		use self::MediaResolution::*;
 		
-		if input.try(|i| i.expect_ident_matching("auto")).is_ok()
+		if input.r#try(|i| i.expect_ident_matching("auto")).is_ok()
 		{
 			return Ok(infinite);
 		}

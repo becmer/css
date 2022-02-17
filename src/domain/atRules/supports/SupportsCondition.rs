@@ -100,7 +100,7 @@ impl SupportsCondition
 	/// https://drafts.csswg.org/css-conditional/#supports_condition
 	pub(crate) fn parse<'i, 't>(input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
 	{
-		if let Ok(_) = input.try(|i| i.expect_ident_matching("not"))
+		if let Ok(_) = input.r#try(|i| i.expect_ident_matching("not"))
 		{
 			let inner = Self::parse_in_parentheses(input)?;
 			return Ok(Not(Box::new(inner)));
@@ -120,11 +120,17 @@ impl SupportsCondition
 					&ident,
                     "and" => ("and", And as fn(_) -> _),
                     "or" => ("or", Or as fn(_) -> _),
-                    _ => return Err(ParseError::Custom(CustomParseError::InvalidSupportsCondition(ident.clone())))
+                    _ => {
+						let ident = ident.clone();
+						return Err(input.new_custom_error(CustomParseError::InvalidSupportsCondition(ident)));
+					},
                 }
 			}
 			
-			Ok(unexpectedToken) => return Err(ParseError::Basic(BasicParseError::UnexpectedToken(unexpectedToken.clone()))),
+			Ok(unexpectedToken) => {
+				let unexpectedToken = unexpectedToken.clone();
+				return Err(input.new_unexpected_token_error(unexpectedToken));
+			},
 		};
 		
 		let mut conditions = Vec::with_capacity(2);
@@ -132,7 +138,7 @@ impl SupportsCondition
 		loop
 		{
 			conditions.push(Self::parse_in_parentheses(input)?);
-			if input.try(|input| input.expect_ident_matching(keyword)).is_err()
+			if input.r#try(|input| input.expect_ident_matching(keyword)).is_err()
 			{
 				// Did not find the expected keyword.
 				// If we found some other token,
@@ -146,7 +152,7 @@ impl SupportsCondition
 	fn parse_in_parentheses<'i, 't>(input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
 	{
 		// Whitespace is normally taken care of in `Parser::next` but we want to not include it in `pos` for the SupportsCondition::FutureSyntax cases.
-		while input.try(Parser::expect_whitespace).is_ok()
+		while input.r#try(Parser::expect_whitespace).is_ok()
 		{
 		}
 		
@@ -156,7 +162,7 @@ impl SupportsCondition
 		{
 			ParenthesisBlock =>
 			{
-				let nested = input.try(|input|
+				let nested = input.r#try(|input|
 				{
 					input.parse_nested_block(|i| Self::parse_condition_or_declaration(i))
 				});
@@ -171,7 +177,7 @@ impl SupportsCondition
 			{
 			}
 			
-			unexpectedToken => return Err(ParseError::Basic(BasicParseError::UnexpectedToken(unexpectedToken))),
+			unexpectedToken => return Err(input.new_unexpected_token_error(unexpectedToken)),
 		}
 		input.parse_nested_block(|i| consume_any_value(i))?;
 		Ok(FutureSyntax(input.slice_from(pos).to_owned()))
@@ -181,7 +187,7 @@ impl SupportsCondition
 	/// https://drafts.csswg.org/css-conditional/#dom-css-supports-conditiontext-conditiontext
 	fn parse_condition_or_declaration<'i, 't>(input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i, CustomParseError<'i>>>
 	{
-		if let Ok(condition) = input.try(Self::parse)
+		if let Ok(condition) = input.r#try(Self::parse)
 		{
 			Ok(Parenthesized(Box::new(condition)))
 		}

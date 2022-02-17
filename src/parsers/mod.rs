@@ -17,10 +17,9 @@ use super::domain::atRules::viewport::*;
 use super::domain::properties::*;
 use self::separators::*;
 use ::ordermap::OrderMap;
-use ::selectors::parser::SelectorImpl;
-use ::selectors::parser::SelectorList;
+use crate::selectors::parser::SelectorImpl;
+use crate::selectors::parser::SelectorList;
 use ::smallvec::SmallVec;
-use ::std::ascii::AsciiExt;
 use ::std::collections::HashMap;
 use ::std::marker::PhantomData;
 use ::std::rc::Rc;
@@ -29,7 +28,7 @@ use ::std::rc::Rc;
 pub(crate) mod separators;
 
 
-include!("AtRuleBlockPrelude.rs");
+include!("AtRulePrelude.rs");
 include!("CounterStyleAtRuleParser.rs");
 include!("FontFaceAtRuleParser.rs");
 include!("FontFeatureValuesBlockType.rs");

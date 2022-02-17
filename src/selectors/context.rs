@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use ::selectors::attr::CaseSensitivity;
-use ::selectors::bloom::BloomFilter;
-use ::selectors::nth_index_cache::NthIndexCache;
+use crate::selectors::attr::CaseSensitivity;
+use crate::selectors::bloom::BloomFilter;
+use crate::selectors::nth_index_cache::NthIndexCache;
 
 /// What kind of selector matching mode we should use.
 ///

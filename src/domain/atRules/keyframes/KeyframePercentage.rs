@@ -39,11 +39,11 @@ impl KeyframePercentage
 {
 	fn parse<'i, 't>(input: &mut Parser<'i, 't>) -> Result<KeyframePercentage, ParseError<'i, CustomParseError<'i>>>
 	{
-		let percentage = if input.try(|input| input.expect_ident_matching("from")).is_ok()
+		let percentage = if input.r#try(|input| input.expect_ident_matching("from")).is_ok()
 		{
 			KeyframePercentage(PercentageUnit::ZeroPercent)
 		}
-		else if input.try(|input| input.expect_ident_matching("to")).is_ok()
+		else if input.r#try(|input| input.expect_ident_matching("to")).is_ok()
 		{
 			KeyframePercentage(PercentageUnit::OneHundredPercent)
 		}
@@ -56,7 +56,7 @@ impl KeyframePercentage
 			}
 			else
 			{
-				return Err(ParseError::Custom(CustomParseError::KeyframePercentageWasNotBetweenZeroAndOneInclusive(percentage)));
+				return Err(input.new_custom_error(CustomParseError::KeyframePercentageWasNotBetweenZeroAndOneInclusive(percentage)));
 			}
 		};
 		

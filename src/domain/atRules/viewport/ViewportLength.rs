@@ -35,7 +35,7 @@ impl ViewportLength
 	{
 		use self::ViewportLength::*;
 		
-		if input.try(|i| i.expect_ident_matching("auto")).is_ok()
+		if input.r#try(|i| i.expect_ident_matching("auto")).is_ok()
 		{
 			return Ok(auto);
 		}
